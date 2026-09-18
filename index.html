@@ -106,7 +106,7 @@
               ỨNG DỤNG QUẢN LÝ THIẾT BỊ CNTT
               <span class="text-xs bg-blue-500/20 text-blue-300 font-medium px-2 py-0.5 rounded border border-blue-400/30 hidden sm:inline">Nhà Máy</span>
             </span>
-            <p class="text-xs text-slate-400 hidden sm:block">Quản Lý Thiết Bị CNTT & Cơ Sở Dữ Liệu Google Sheets</p>
+            <p class="text-xs text-slate-400 hidden sm:block">Quản Lý Thiết Bị CNTT</p>
           </div>
         </div>
 
@@ -339,25 +339,26 @@
             <select id="filterCategory" onchange="applyFilters()" class="text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">Tất cả loại máy</option>
               <option value="Laptop">Laptop</option>
-              <option value="PC">PC</option>
-              <option value="Máy in tem">Máy in tem</option>
-              <option value="Máy in văn phòng">Máy in văn phòng</option>
+              <option value="Desktop">Desktop</option>
+              <option value="Máy in">Máy in</option>
+              <option value="Máy Photocopy">Máy Photocopy</option>
               <option value="Switch">Switch</option>
               <option value="Access Point">Access Point</option>
               <option value="Màn hình">Màn hình</option>
-              <option value="Thiết bị IoT/Handheld">Handheld / IoT</option>
+              <option value="Camera">Camera</option>
             </select>
 
             <!-- Area Filter -->
             <select id="filterArea" onchange="applyFilters()" class="text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">Tất cả khu vực</option>
-              <option value="Xưởng A">Xưởng A</option>
-              <option value="Kho thành phẩm">Kho thành phẩm</option>
+              <option value="Phòng HCNS">Phòng HCNS</option>
+              <option value="Phòng tổng hợp">Phòng tổng hợp</option>
               <option value="Kho nguyên liệu">Kho nguyên liệu</option>
-              <option value="Phòng QC">Phòng QC</option>
-              <option value="Văn phòng IT">Văn phòng IT</option>
+              <option value="Kho phụ liệu">Kho phụ liệu</option>
+              <option value="Văn phòng xưởng">Văn phòng xưởng</option>
               <option value="Phòng Server">Phòng Server</option>
               <option value="Kho IT">Kho IT</option>
+	      <option value="Phân xưởng dệt">Phân xưởng dệt</option>
             </select>
 
             <!-- Status Filter -->
@@ -683,13 +684,13 @@
             <label class="block text-xs font-semibold text-slate-700 mb-1">Chủng Loại <span class="text-red-500">*</span></label>
             <select id="formCategory" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
               <option value="Laptop">Laptop</option>
-              <option value="PC">PC</option>
-              <option value="Máy in tem">Máy in tem</option>
-              <option value="Máy in văn phòng">Máy in văn phòng</option>
+              <option value="Desktop">Desktop</option>
+              <option value="Máy in">Máy in</option>
+              <option value="Máy Photocopy">Máy Photocopy</option>
               <option value="Switch">Switch</option>
               <option value="Access Point">Access Point</option>
               <option value="Màn hình">Màn hình</option>
-              <option value="Thiết bị IoT/Handheld">Thiết bị IoT/Handheld</option>
+              <option value="Camera">Camera</option>
               <option value="Khác">Khác...</option>
             </select>
           </div>
@@ -709,14 +710,14 @@
           <!-- Khu vực / Phân xưởng -->
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">Khu Vực / Phân Xưởng <span class="text-red-500">*</span></label>
-            <input type="text" id="formFactoryArea" required list="areaOptions" placeholder="VD: Xưởng A, Kho thành phẩm..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            <input type="text" id="formFactoryArea" required list="areaOptions" placeholder="VD: Phòng HCNS, Kho nguyên liệu..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
             <datalist id="areaOptions">
-              <option value="Xưởng A"></option>
-              <option value="Xưởng B"></option>
+              <option value="Phòng HCNS"></option>
+              <option value="Phòng tổng hợp"></option>
               <option value="Kho nguyên liệu"></option>
-              <option value="Kho thành phẩm"></option>
-              <option value="Phòng QC"></option>
-              <option value="Văn phòng IT"></option>
+              <option value="Kho phụ liệu"></option>
+              <option value="Phân xưởng dệt"></option>
+              <option value="Văn phòng xưởng"></option>
               <option value="Phòng Server"></option>
               <option value="Kho IT"></option>
             </datalist>
