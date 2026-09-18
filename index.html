@@ -2,7 +2,7 @@
 <html lang="vi" class="h-full bg-slate-50">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Quản Lý Thiết Bị CNTT Nhà Máy Long Khải | IT Asset Management</title>
   
   <!-- Tailwind CSS CDN -->
@@ -52,7 +52,25 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
-    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      -webkit-tap-highlight-color: transparent; 
+    }
+    
+    /* Chống hiện tượng iOS Safari tự động phóng to (auto-zoom) khi bấm vào ô nhập liệu */
+    @media (max-width: 640px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
+
+    /* Đệm khoảng trống an toàn cho thanh điều hướng đáy trên điện thoại (iPhone X+ safe area) */
+    .safe-area-bottom {
+      padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+    }
+    .has-bottom-bar {
+      padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
     
     /* Animation laser quét QR */
     @keyframes scanline {
@@ -173,61 +191,62 @@
 
   <!-- ================= TOP NAVIGATION BAR ================= -->
   <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-14 sm:h-16">
         
-        <!-- Logo & Title -->
-        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
-          <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-            <i class="fa-solid fa-server text-white text-lg"></i>
+        <!-- Logo & Title (Responsive: Compact on Mobile) -->
+        <div class="flex items-center space-x-2 sm:space-x-3 cursor-pointer select-none flex-shrink-0" onclick="switchTab('dashboard')">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 flex-shrink-0">
+            <i class="fa-solid fa-server text-white text-sm sm:text-lg"></i>
           </div>
           <div>
-            <span class="font-bold text-lg tracking-tight text-white flex items-center gap-2">
-              ỨNG DỤNG QUẢN LÝ THIẾT BỊ CNTT
-              <span class="text-xs bg-blue-500/20 text-blue-300 font-medium px-2 py-0.5 rounded border border-blue-400/30 hidden sm:inline">Nhà Máy</span>
+            <span class="font-bold text-sm sm:text-lg tracking-tight text-white flex items-center gap-1.5 leading-none">
+              <span class="inline sm:hidden">QLTB CNTT</span>
+              <span class="hidden sm:inline">ỨNG DỤNG QUẢN LÝ THIẾT BỊ CNTT</span>
+              <span class="text-[10px] bg-blue-500/20 text-blue-300 font-medium px-1.5 py-0.5 rounded border border-blue-400/30 hidden md:inline">Nhà Máy</span>
             </span>
-            <p class="text-xs text-slate-400 hidden sm:block">Quản Lý Thiết Bị CNTT</p>
+            <p class="text-[10px] text-slate-400 hidden sm:block mt-0.5">Quản Lý Thiết Bị CNTT</p>
           </div>
         </div>
 
         <!-- Connection Status & Quick Actions -->
-        <div class="flex items-center space-x-2 sm:space-x-3">
+        <div class="flex items-center space-x-1.5 sm:space-x-2.5">
           <!-- Status Badge -->
-          <div id="connectionStatusBadge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 cursor-pointer" onclick="openSettingsModal()" title="Nhấn để cấu hình kết nối">
-            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span id="connectionStatusText" class="hidden xs:inline">Chế độ Demo</span>
+          <div id="connectionStatusBadge" class="flex items-center space-x-1.5 px-2 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 cursor-pointer flex-shrink-0" onclick="openSettingsModal()" title="Nhấn để cấu hình kết nối Google Sheets">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
+            <span id="connectionStatusText" class="hidden sm:inline">Chế độ Demo</span>
           </div>
 
-          <!-- Quick QR Scan Button -->
-          <button onclick="switchTab('scanner')" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-lg shadow transition active:scale-95">
+          <!-- Quick QR Scan Button (Top Bar) -->
+          <button onclick="switchTab('scanner')" class="hidden sm:flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-lg shadow transition active:scale-95">
             <i class="fa-solid fa-qrcode text-base"></i>
-            <span class="hidden sm:inline">Quét QR</span>
+            <span>Quét QR</span>
           </button>
 
           <!-- Sync Refresh Button -->
-          <button onclick="fetchData(true)" id="syncBtn" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Đồng bộ dữ liệu">
-            <i class="fa-solid fa-rotate"></i>
+          <button onclick="fetchData(true)" id="syncBtn" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition active:scale-95" title="Đồng bộ dữ liệu từ Sheet">
+            <i class="fa-solid fa-rotate text-sm sm:text-base"></i>
           </button>
 
           <!-- Settings Button -->
-          <button onclick="openSettingsModal()" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Cài đặt API">
-            <i class="fa-solid fa-gear"></i>
+          <button onclick="openSettingsModal()" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition active:scale-95" title="Cài đặt API kết nối">
+            <i class="fa-solid fa-gear text-sm sm:text-base"></i>
           </button>
 
           <!-- User Profile & Logout Button -->
-          <div class="h-6 w-px bg-slate-700 hidden sm:block"></div>
-          <div class="flex items-center space-x-2">
-            <div class="flex items-center space-x-2 px-2.5 py-1 rounded-lg bg-slate-800/90 border border-slate-700 text-xs">
-              <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                <i class="fa-solid fa-user-gear"></i>
+          <div class="h-5 sm:h-6 w-px bg-slate-700 mx-0.5 sm:mx-1"></div>
+          <div class="flex items-center space-x-1 sm:space-x-2">
+            <div class="hidden md:flex items-center space-x-2 px-2.5 py-1 rounded-lg bg-slate-800/90 border border-slate-700 text-xs">
+              <div class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                <i class="fa-solid fa-user-gear text-[11px]"></i>
               </div>
-              <div class="hidden md:block text-left leading-tight">
-                <span id="headerUserName" class="font-bold text-white block truncate max-w-[130px]"></span>
+              <div class="text-left leading-tight">
+                <span id="headerUserName" class="font-bold text-white block truncate max-w-[120px]"></span>
                 <span id="headerUserRole" class="text-[10px] text-blue-300 font-medium block"></span>
               </div>
             </div>
-            <button onclick="handleLogout()" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 text-xs sm:text-sm font-semibold rounded-lg transition active:scale-95" title="Đăng xuất khỏi hệ thống">
-              <i class="fa-solid fa-right-from-bracket"></i>
+            <button onclick="handleLogout()" class="p-1.5 sm:px-2.5 sm:py-1.5 bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 text-xs sm:text-sm font-semibold rounded-lg transition active:scale-95 flex items-center gap-1" title="Đăng xuất khỏi hệ thống">
+              <i class="fa-solid fa-right-from-bracket text-xs sm:text-sm"></i>
               <span class="hidden sm:inline">Đăng xuất</span>
             </button>
           </div>
@@ -235,8 +254,8 @@
 
       </div>
 
-      <!-- Main Navigation Tabs -->
-      <nav class="flex space-x-1 sm:space-x-4 border-t border-slate-800 py-1 overflow-x-auto text-sm font-medium">
+      <!-- Main Navigation Tabs (Desktop / Tablet) -->
+      <nav class="hidden sm:flex space-x-1 sm:space-x-4 border-t border-slate-800 py-1 overflow-x-auto text-sm font-medium">
         <button id="tab-btn-dashboard" onclick="switchTab('dashboard')" class="nav-tab px-3 py-2 rounded-md text-blue-400 bg-slate-800 flex items-center gap-2 whitespace-nowrap">
           <i class="fa-solid fa-chart-pie"></i>
           <span>Tổng quan</span>
@@ -258,8 +277,21 @@
     </div>
   </header>
 
+  <!-- BANNER CẢNH BÁO KHI CHƯA CẤU HÌNH API TRÊN ĐIỆN THOẠI / MÁY MỚI -->
+  <div id="noApiBanner" class="hidden bg-gradient-to-r from-amber-600 to-amber-700 text-white px-3 sm:px-4 py-2 text-xs sm:text-sm shadow-sm flex items-center justify-between gap-2 border-b border-amber-500/40">
+    <div class="flex items-center gap-2 flex-1 min-w-0">
+      <i class="fa-solid fa-triangle-exclamation text-amber-200 text-sm flex-shrink-0 animate-bounce"></i>
+      <span class="truncate">
+        Chưa kết nối Google Sheets. Dữ liệu chưa thể đồng bộ.
+      </span>
+    </div>
+    <button onclick="openSettingsModal()" class="px-2.5 py-1 bg-white text-amber-900 font-bold rounded shadow-xs hover:bg-amber-100 flex-shrink-0 text-xs whitespace-nowrap active:scale-95 transition">
+      <i class="fa-solid fa-plug mr-1"></i>Kết Nối Ngay
+    </button>
+  </div>
+
   <!-- ================= MAIN CONTENT AREA ================= -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 has-bottom-bar">
 
     <!-- 1. TAB: DASHBOARD & THỐNG KÊ -->
     <section id="view-dashboard" class="space-y-6">
@@ -470,9 +502,11 @@
         </div>
       </div>
 
-      <!-- Table Container -->
+      <!-- Table & Mobile Cards Container -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="overflow-x-auto min-h-[380px]">
+        
+        <!-- Desktop Table View (Ẩn trên điện thoại, hiển thị từ tablet/máy tính trở lên) -->
+        <div class="hidden md:block overflow-x-auto min-h-[380px]">
           <table class="w-full text-left border-collapse text-xs sm:text-sm">
             <thead>
               <tr class="bg-slate-800 text-white uppercase text-[11px] tracking-wider font-semibold">
@@ -491,6 +525,11 @@
               <!-- Render via JS -->
             </tbody>
           </table>
+        </div>
+
+        <!-- Mobile Card List View (Tối ưu riêng cho màn hình điện thoại, không cần cuộn ngang) -->
+        <div id="devicesMobileContainer" class="block md:hidden divide-y divide-slate-200 bg-slate-50/50">
+          <!-- Render via JS -->
         </div>
 
         <!-- Pagination & Counter Footer -->
@@ -1138,6 +1177,34 @@
           </ol>
         </div>
 
+        <!-- Đồng bộ sang Điện thoại qua Mã QR hoặc Link (Rất tiện lợi khi đưa lên GitHub) -->
+        <div class="pt-4 border-t border-slate-200">
+          <h5 class="text-xs font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-mobile-screen-button text-indigo-600"></i>
+            Đồng bộ sang Điện thoại (Không cần gõ lại URL):
+          </h5>
+          <p class="text-[11px] text-slate-500 mb-2.5">
+            Dùng Camera điện thoại quét mã QR dưới đây hoặc sao chép link để mở Web App đã được tự động kết nối với Google Sheets:
+          </p>
+          <div class="flex flex-col sm:flex-row items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div id="mobileShareQrContainer" class="p-1 bg-white border border-slate-300 rounded shadow-xs flex-shrink-0 flex items-center justify-center min-w-[120px] min-h-[120px]">
+              <span class="text-[10px] text-slate-400 text-center">Bấm "Tạo Mã QR"</span>
+            </div>
+            <div class="space-y-2 flex-1 w-full min-w-0">
+              <label class="text-[11px] font-semibold text-slate-600 block">Link kèm cấu hình tự động:</label>
+              <input type="text" id="shareUrlInput" readonly class="w-full text-xs font-mono px-2.5 py-1.5 bg-white border border-slate-300 rounded text-slate-600 select-all" onclick="this.select()">
+              <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="copyShareUrl()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold transition flex items-center gap-1 active:scale-95">
+                  <i class="fa-solid fa-copy"></i> Sao chép link
+                </button>
+                <button type="button" onclick="generateMobileConfigQr()" class="px-3 py-1.5 border border-slate-300 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium transition active:scale-95">
+                  <i class="fa-solid fa-arrows-rotate"></i> Tạo lại QR
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="pt-4 border-t border-slate-200 flex justify-end gap-2">
           <button onclick="closeModal('settingsModal')" class="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg text-sm font-medium">Đóng</button>
           <button onclick="saveApiUrl()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow">
@@ -1230,7 +1297,33 @@
   </div>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+  <!-- ================= MOBILE BOTTOM NAVIGATION BAR (FIXED) ================= -->
+  <nav class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-2 py-1.5 flex items-center justify-around text-[10px] font-medium shadow-2xl safe-area-bottom">
+    <button id="mobile-nav-dashboard" onclick="switchTab('dashboard')" class="flex flex-col items-center py-1 px-2 rounded-lg transition text-blue-400 font-bold">
+      <i class="fa-solid fa-chart-pie text-base mb-0.5"></i>
+      <span>Tổng quan</span>
+    </button>
+    <button id="mobile-nav-devices" onclick="switchTab('devices')" class="flex flex-col items-center py-1 px-2 rounded-lg transition relative text-slate-400">
+      <i class="fa-solid fa-laptop text-base mb-0.5"></i>
+      <span>Thiết bị</span>
+      <span id="mobileTabCountBadge" class="absolute top-0 right-0 bg-blue-600 text-white text-[9px] px-1.5 rounded-full font-bold">0</span>
+    </button>
+    <button id="mobile-nav-scanner" onclick="switchTab('scanner')" class="flex flex-col items-center py-1 px-3 -mt-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-lg shadow-emerald-600/40 active:scale-95 transition">
+      <i class="fa-solid fa-qrcode text-lg mb-0.5"></i>
+      <span class="font-bold text-[10px]">Quét QR</span>
+    </button>
+    <button id="mobile-nav-history" onclick="switchTab('history')" class="flex flex-col items-center py-1 px-2 rounded-lg transition text-slate-400">
+      <i class="fa-solid fa-clock-rotate-left text-base mb-0.5"></i>
+      <span>Nhật ký</span>
+    </button>
+    <button onclick="openSettingsModal()" class="flex flex-col items-center py-1 px-2 rounded-lg transition text-slate-400">
+      <i class="fa-solid fa-gear text-base mb-0.5"></i>
+      <span>Cài đặt</span>
+    </button>
+  </nav>
+
+  <!-- TOAST NOTIFICATION CONTAINER (Trên mobile tự động nâng cao hơn thanh đáy) -->
+  <div id="toastContainer" class="fixed bottom-16 sm:bottom-5 right-4 sm:right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
   <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
   <script>
@@ -1243,6 +1336,43 @@
     const STORAGE_KEY_LOCAL_DATA = 'IT_ASSET_LOCAL_CACHE';
     const STORAGE_KEY_AUTH_USER = 'IT_ASSET_AUTH_USER';
     const STORAGE_KEY_REMEMBERED_USERNAME = 'IT_ASSET_REMEMBERED_USERNAME';
+
+    // Cấu hình URL Web App Google Apps Script mặc định (Dành cho triển khai GitHub Pages)
+    // Nếu bạn muốn tất cả điện thoại/máy tính mở link GitHub đều tự động kết nối Sheet mà không cần cài đặt:
+    // Hãy dán URL Web App của bạn vào biến DEFAULT_GAS_API_URL dưới đây:
+    const DEFAULT_GAS_API_URL = '';
+
+    /**
+     * Tự động nhận diện URL API từ:
+     * 1. Tham số trên link trình duyệt (?api=... hoặc #api=...) - Rất tiện khi quét QR từ máy tính sang điện thoại
+     * 2. Bộ nhớ cục bộ thiết bị (localStorage)
+     * 3. Biến cấu hình mặc định DEFAULT_GAS_API_URL
+     */
+    function resolveInitialApiUrl() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        let apiParam = urlParams.get('api');
+        
+        if (!apiParam && window.location.hash && window.location.hash.startsWith('#api=')) {
+          apiParam = decodeURIComponent(window.location.hash.substring(5));
+        }
+
+        if (apiParam && apiParam.trim().startsWith('http')) {
+          const cleanApi = apiParam.trim();
+          localStorage.setItem(STORAGE_KEY_API_URL, cleanApi);
+          // Làm sạch URL trình duyệt sau khi đã lưu cấu hình thành công
+          if (window.history && window.history.replaceState) {
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+          }
+          return cleanApi;
+        }
+      } catch (e) {
+        console.warn('Lỗi đọc tham số API từ URL:', e);
+      }
+
+      return localStorage.getItem(STORAGE_KEY_API_URL) || DEFAULT_GAS_API_URL || '';
+    }
 
     // Danh sách tài khoản đăng nhập mặc định (Hỗ trợ xác thực Demo / Offline)
     const DEFAULT_ACCOUNTS = [
@@ -1259,7 +1389,7 @@
       currentUser: null,
       devices: [],
       history: [],
-      apiUrl: localStorage.getItem(STORAGE_KEY_API_URL) || '',
+      apiUrl: resolveInitialApiUrl(),
       isLive: false,
       currentPage: 1,
       pageSize: 8,
@@ -1530,11 +1660,12 @@
 
     /**
      * =========================================================================
-     * 3. GỌI API GOOGLE APPS SCRIPT (CORS COMPLIANT FETCH)
+     * 3. GỌI API GOOGLE APPS SCRIPT (CORS COMPLIANT FETCH CHO DESKTOP & MOBILE)
      * =========================================================================
      */
     async function fetchData(isManualSync = false) {
       if (!appState.apiUrl) {
+        updateConnectionBadge(false, 'Chưa kết nối API');
         loadMockData();
         return;
       }
@@ -1545,14 +1676,23 @@
       try {
         const url = new URL(appState.apiUrl);
         url.searchParams.set('action', 'getAllData');
-        url.searchParams.set('t', Date.now()); // Tránh cache
+        url.searchParams.set('t', Date.now()); // Chống cache trên trình duyệt di động
 
         const response = await fetch(url.toString(), {
           method: 'GET',
-          headers: { 'Accept': 'application/json' }
+          mode: 'cors',
+          redirect: 'follow',
+          credentials: 'omit'
         });
 
-        const resData = await response.json();
+        const rawText = await response.text();
+
+        // Kiểm tra xem Apps Script có trả về trang đăng nhập Google do chưa mở quyền "Anyone" không
+        if (rawText.trim().startsWith('<!DOCTYPE') || rawText.includes('<html') || rawText.includes('accounts.google.com')) {
+          throw new Error('Web App yêu cầu đăng nhập Google. Hãy vào Apps Script -> Deploy -> Manage deployments -> Cấp quyền "Who has access: Anyone" (Bất kỳ ai)!');
+        }
+
+        const resData = JSON.parse(rawText);
 
         if (resData && resData.status === 'success') {
           appState.devices = resData.devices || [];
@@ -1578,12 +1718,11 @@
 
     /**
      * Gửi request POST tới Google Apps Script
-     * Lưu ý quan trọng: Apps Script Web App khi nhận POST sẽ redirect 302.
-     * Để tránh lỗi CORS preflight (OPTIONS), gửi body dưới dạng text/plain;charset=utf-8
+     * Hỗ trợ đầy đủ trình duyệt di động (iOS Safari, Android Chrome, GitHub Pages)
      */
     async function sendGasPost(action, data) {
-      if (!appState.apiUrl || !appState.isLive) {
-        // Mô phỏng cập nhật nội bộ khi ở Demo Mode
+      if (!appState.apiUrl) {
+        // Chưa cấu hình URL API -> Thực hiện cục bộ ở chế độ Demo
         return handleLocalMockAction(action, data);
       }
 
@@ -1591,19 +1730,32 @@
         const payload = { action: action, data: data };
         const response = await fetch(appState.apiUrl, {
           method: 'POST',
+          mode: 'cors',
+          redirect: 'follow',
+          credentials: 'omit',
           headers: {
             'Content-Type': 'text/plain;charset=utf-8'
           },
           body: JSON.stringify(payload)
         });
 
-        const res = await response.json();
+        const rawText = await response.text();
+
+        if (rawText.trim().startsWith('<!DOCTYPE') || rawText.includes('<html') || rawText.includes('accounts.google.com')) {
+          throw new Error('Web App yêu cầu đăng nhập Google. Hãy cấu hình "Who has access: Anyone" trong Apps Script!');
+        }
+
+        const res = JSON.parse(rawText);
+        if (res && res.status === 'success') {
+          appState.isLive = true;
+          updateConnectionBadge(true);
+        }
         return res;
       } catch (err) {
         console.error('Lỗi khi gửi dữ liệu lên Google Sheets:', err);
         // Fallback thực hiện cục bộ để người dùng không bị gián đoạn trải nghiệm
         handleLocalMockAction(action, data);
-        return { status: 'success', message: 'Đã lưu cục bộ (Chưa đồng bộ lên Sheet do mạng: ' + err.message + ')' };
+        return { status: 'success', message: 'Đã lưu tạm trên máy (Lỗi gửi lên Sheet: ' + err.message + ')' };
       }
     }
 
@@ -1618,28 +1770,29 @@
           performed_by: data.performed_by || 'IT Support',
           description: 'Thêm mới thiết bị vào hệ thống: ' + (data.name || data.id)
         });
-        return { status: 'success', message: 'Thêm mới thành công (Demo)' };
-      } else if (action === 'updateDevice') {
+        return { status: 'success', message: 'Đã thêm thiết bị mới (Demo)' };
+      }
+      if (action === 'updateDevice') {
         const idx = appState.devices.findIndex(d => d.id === data.id);
         if (idx !== -1) {
           appState.devices[idx] = { ...appState.devices[idx], ...data };
+          appState.history.unshift({
+            log_id: 'LOG-' + Date.now().toString().slice(-6),
+            device_id: data.id,
+            action_type: 'Bảo dưỡng',
+            date: new Date().toISOString().replace('T', ' ').slice(0, 19),
+            performed_by: data.performed_by || 'IT Support',
+            description: 'Cập nhật thông tin thiết bị: ' + (data.name || data.id)
+          });
+          return { status: 'success', message: 'Đã cập nhật thiết bị (Demo)' };
         }
-        return { status: 'success', message: 'Cập nhật thành công (Demo)' };
-      } else if (action === 'deleteDevice') {
+      }
+      if (action === 'deleteDevice') {
         appState.devices = appState.devices.filter(d => d.id !== data.id);
         return { status: 'success', message: 'Đã xóa thiết bị (Demo)' };
-      } else if (action === 'addHistoryLog') {
-        const log = {
-          log_id: 'LOG-' + Date.now().toString().slice(-6),
-          device_id: data.device_id,
-          action_type: data.action_type,
-          date: new Date().toISOString().replace('T', ' ').slice(0, 19),
-          performed_by: data.performed_by,
-          description: data.description
-        };
-        appState.history.unshift(log);
-
-        // Cập nhật trạng thái tab Devices nếu có
+      }
+      if (action === 'addHistoryLog') {
+        appState.history.unshift(data);
         const dev = appState.devices.find(d => d.id === data.device_id);
         if (dev) {
           if (data.new_status) dev.status = data.new_status;
@@ -1654,16 +1807,27 @@
     function updateConnectionBadge(isLive, customText) {
       const badge = document.getElementById('connectionStatusBadge');
       const text = document.getElementById('connectionStatusText');
+      const noApiBanner = document.getElementById('noApiBanner');
+
+      // Cập nhật banner cảnh báo
+      if (noApiBanner) {
+        if (!appState.apiUrl) {
+          noApiBanner.classList.remove('hidden');
+        } else {
+          noApiBanner.classList.add('hidden');
+        }
+      }
+
       if (!badge || !text) return;
 
       if (isLive) {
-        badge.className = 'flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-pointer';
+        badge.className = 'flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-pointer flex-shrink-0';
         text.innerText = 'Google Sheets (Live)';
-        badge.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-emerald-400';
+        badge.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0';
       } else {
-        badge.className = 'flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 cursor-pointer';
+        badge.className = 'flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 cursor-pointer flex-shrink-0';
         text.innerText = customText || 'Chế độ Demo';
-        badge.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+        badge.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0';
       }
     }
 
@@ -1701,6 +1865,8 @@
 
       const badgeCount = document.getElementById('tabCountBadge');
       if (badgeCount) badgeCount.innerText = total;
+      const mobileBadge = document.getElementById('mobileTabCountBadge');
+      if (mobileBadge) mobileBadge.innerText = total;
     }
 
     /**
@@ -1968,6 +2134,7 @@
 
     function renderDevicesTable() {
       const tbody = document.getElementById('devicesTableBody');
+      const mobileContainer = document.getElementById('devicesMobileContainer');
       const items = appState.filteredDevices;
       const total = items.length;
 
@@ -1976,14 +2143,27 @@
         const emptyMsg = hasFilter 
           ? 'Không tìm thấy thiết bị nào phù hợp với điều kiện tìm kiếm.' 
           : 'Chưa có thiết bị nào trong hệ thống. Nhấn nút "+ Thêm Mới" để bắt đầu nhập dữ liệu thiết bị!';
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="9" class="text-center py-14 text-slate-400 text-sm">
+        
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="9" class="text-center py-14 text-slate-400 text-sm">
+                <i class="fa-solid fa-folder-open text-3xl mb-2 block text-slate-300"></i>
+                ${emptyMsg}
+              </td>
+            </tr>
+          `;
+        }
+
+        if (mobileContainer) {
+          mobileContainer.innerHTML = `
+            <div class="text-center py-12 px-4 text-slate-400 text-sm">
               <i class="fa-solid fa-folder-open text-3xl mb-2 block text-slate-300"></i>
               ${emptyMsg}
-            </td>
-          </tr>
-        `;
+            </div>
+          `;
+        }
+
         document.getElementById('pageRangeText').innerText = '0 - 0';
         document.getElementById('pageTotalText').innerText = '0';
         document.getElementById('paginationControls').innerHTML = '';
@@ -1997,53 +2177,119 @@
       const endIdx = Math.min(startIdx + appState.pageSize, total);
       const pageItems = items.slice(startIdx, endIdx);
 
-      tbody.innerHTML = pageItems.map((item, idx) => {
-        const rowNum = startIdx + idx + 1;
-        const statusBadge = getStatusBadgeHtml(item.status);
+      // 1. Render Desktop Table View
+      if (tbody) {
+        tbody.innerHTML = pageItems.map((item, idx) => {
+          const rowNum = startIdx + idx + 1;
+          const statusBadge = getStatusBadgeHtml(item.status);
 
-        return `
-          <tr class="hover:bg-slate-50/80 transition group">
-            <td class="py-3 px-4 text-center text-slate-400 font-mono text-xs">${rowNum}</td>
-            <td class="py-3 px-4 font-mono font-bold text-blue-600 whitespace-nowrap">
-              <button onclick="openDeviceDetailModal('${item.id}')" class="hover:underline flex items-center gap-1.5">
-                <i class="fa-solid fa-tag text-[11px] text-slate-400"></i> ${escapeHtml(item.id)}
-              </button>
-            </td>
-            <td class="py-3 px-4 font-semibold text-slate-800">
-              <div class="line-clamp-1">${escapeHtml(item.name)}</div>
-              <div class="text-[11px] text-slate-400 font-mono font-normal">S/N: ${escapeHtml(item.serial_number || 'N/A')}</div>
-            </td>
-            <td class="py-3 px-4 hidden md:table-cell text-slate-600">${escapeHtml(item.category)}</td>
-            <td class="py-3 px-4 hidden sm:table-cell text-slate-600">
-              <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs">
-                <i class="fa-solid fa-location-dot text-[10px] text-slate-400"></i> ${escapeHtml(item.factory_area)}
-              </span>
-            </td>
-            <td class="py-3 px-4 text-slate-700 font-medium">${escapeHtml(item.assigned_to)}</td>
-            <td class="py-3 px-4 hidden lg:table-cell text-slate-500 font-mono text-xs">${escapeHtml(item.ip_mac || '-')}</td>
-            <td class="py-3 px-4">${statusBadge}</td>
-            <td class="py-3 px-4 text-center whitespace-nowrap">
-              <div class="flex items-center justify-center space-x-1">
-                <button onclick="openDeviceDetailModal('${item.id}')" class="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded" title="Xem chi tiết & lịch sử">
-                  <i class="fa-solid fa-eye"></i>
+          return `
+            <tr class="hover:bg-slate-50/80 transition group">
+              <td class="py-3 px-4 text-center text-slate-400 font-mono text-xs">${rowNum}</td>
+              <td class="py-3 px-4 font-mono font-bold text-blue-600 whitespace-nowrap">
+                <button onclick="openDeviceDetailModal('${item.id}')" class="hover:underline flex items-center gap-1.5">
+                  <i class="fa-solid fa-tag text-[11px] text-slate-400"></i> ${escapeHtml(item.id)}
                 </button>
-                <button onclick="openAddHistoryModal('${item.id}')" class="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded" title="Ghi nhật ký bảo trì / Điều chuyển">
-                  <i class="fa-solid fa-wrench"></i>
+              </td>
+              <td class="py-3 px-4 font-semibold text-slate-800">
+                <div class="line-clamp-1">${escapeHtml(item.name)}</div>
+                <div class="text-[11px] text-slate-400 font-mono font-normal">S/N: ${escapeHtml(item.serial_number || 'N/A')}</div>
+              </td>
+              <td class="py-3 px-4 hidden md:table-cell text-slate-600">${escapeHtml(item.category)}</td>
+              <td class="py-3 px-4 hidden sm:table-cell text-slate-600">
+                <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs">
+                  <i class="fa-solid fa-location-dot text-[10px] text-slate-400"></i> ${escapeHtml(item.factory_area)}
+                </span>
+              </td>
+              <td class="py-3 px-4 text-slate-700 font-medium">${escapeHtml(item.assigned_to)}</td>
+              <td class="py-3 px-4 hidden lg:table-cell text-slate-500 font-mono text-xs">${escapeHtml(item.ip_mac || '-')}</td>
+              <td class="py-3 px-4">${statusBadge}</td>
+              <td class="py-3 px-4 text-center whitespace-nowrap">
+                <div class="flex items-center justify-center space-x-1">
+                  <button onclick="openDeviceDetailModal('${item.id}')" class="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded" title="Xem chi tiết & lịch sử">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                  <button onclick="openAddHistoryModal('${item.id}')" class="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded" title="Ghi nhật ký bảo trì / Điều chuyển">
+                    <i class="fa-solid fa-wrench"></i>
+                  </button>
+                  <button onclick="openPrintModal('${item.id}')" class="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded" title="In tem nhãn QR">
+                    <i class="fa-solid fa-print"></i>
+                  </button>
+                  <button onclick="openDeviceModal('edit', '${item.id}')" class="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Chỉnh sửa thông tin">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button onclick="confirmDeleteDevice('${item.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="Xóa thiết bị">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // 2. Render Mobile Card View (Thiết kế tối ưu cho ngón tay và màn hình hẹp)
+      if (mobileContainer) {
+        mobileContainer.innerHTML = pageItems.map((item, idx) => {
+          const rowNum = startIdx + idx + 1;
+          const statusBadge = getStatusBadgeHtml(item.status);
+
+          return `
+            <div class="p-4 bg-white hover:bg-slate-50 transition space-y-2.5">
+              <!-- Dòng 1: STT, Mã ID & Trạng thái -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10px] font-mono font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">#${rowNum}</span>
+                  <button onclick="openDeviceDetailModal('${item.id}')" class="font-mono font-bold text-blue-600 text-sm hover:underline flex items-center gap-1">
+                    <i class="fa-solid fa-tag text-[10px] text-slate-400"></i> ${escapeHtml(item.id)}
+                  </button>
+                </div>
+                <div>${statusBadge}</div>
+              </div>
+
+              <!-- Dòng 2: Tên thiết bị & Chủng loại -->
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(item.name)}</h4>
+                <div class="flex items-center justify-between text-xs text-slate-500 mt-1">
+                  <span>Loại: <strong class="text-slate-700">${escapeHtml(item.category || 'N/A')}</strong></span>
+                  <span class="font-mono text-[11px] text-slate-500">S/N: ${escapeHtml(item.serial_number || 'N/A')}</span>
+                </div>
+              </div>
+
+              <!-- Dòng 3: Phân xưởng & Người dùng -->
+              <div class="flex items-center justify-between text-xs text-slate-600 pt-0.5 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                <span class="inline-flex items-center gap-1 text-slate-700 truncate max-w-[50%]">
+                  <i class="fa-solid fa-location-dot text-indigo-500 text-[10px] flex-shrink-0"></i>
+                  <span class="truncate">${escapeHtml(item.factory_area || 'Chưa gán')}</span>
+                </span>
+                <span class="inline-flex items-center gap-1 font-medium text-slate-800 truncate max-w-[48%]">
+                  <i class="fa-solid fa-user text-slate-400 text-[10px] flex-shrink-0"></i>
+                  <span class="truncate">${escapeHtml(item.assigned_to || 'Chưa gán')}</span>
+                </span>
+              </div>
+
+              <!-- Dòng 4: Các nút bấm thao tác cảm ứng lớn -->
+              <div class="pt-1 flex items-center justify-between gap-1.5">
+                <button onclick="openDeviceDetailModal('${item.id}')" class="flex-1 py-2 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition active:scale-95">
+                  <i class="fa-solid fa-eye text-blue-600"></i> Chi tiết
                 </button>
-                <button onclick="openPrintModal('${item.id}')" class="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded" title="In tem nhãn QR">
-                  <i class="fa-solid fa-print"></i>
+                <button onclick="openAddHistoryModal('${item.id}')" class="flex-1 py-2 px-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/60 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition active:scale-95">
+                  <i class="fa-solid fa-wrench text-amber-600"></i> Bảo trì
                 </button>
-                <button onclick="openDeviceModal('edit', '${item.id}')" class="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Chỉnh sửa thông tin">
-                  <i class="fa-solid fa-pen"></i>
+                <button onclick="openPrintModal('${item.id}')" class="p-2 w-9 h-9 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs flex items-center justify-center transition active:scale-95" title="In tem nhãn QR">
+                  <i class="fa-solid fa-print text-slate-600"></i>
                 </button>
-                <button onclick="confirmDeleteDevice('${item.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="Xóa thiết bị">
-                  <i class="fa-solid fa-trash-can"></i>
+                <button onclick="openDeviceModal('edit', '${item.id}')" class="p-2 w-9 h-9 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 rounded-lg text-xs flex items-center justify-center transition active:scale-95" title="Sửa thông tin">
+                  <i class="fa-solid fa-pen text-indigo-600"></i>
+                </button>
+                <button onclick="confirmDeleteDevice('${item.id}')" class="p-2 w-9 h-9 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/60 rounded-lg text-xs flex items-center justify-center transition active:scale-95" title="Xóa thiết bị">
+                  <i class="fa-solid fa-trash-can text-rose-600"></i>
                 </button>
               </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
+            </div>
+          `;
+        }).join('');
+      }
 
       // Update footer
       document.getElementById('pageRangeText').innerText = `${startIdx + 1} - ${endIdx}`;
@@ -2106,8 +2352,17 @@
       try {
         const devices = await Html5Qrcode.getCameras();
         if (devices && devices.length) {
+          // Tự động ưu tiên chọn camera sau (rear / environment) trên điện thoại
+          let defaultCamId = devices[0].id;
+          const backCam = devices.find(d => /back|rear|environment|sau/i.test(d.label));
+          if (backCam) {
+            defaultCamId = backCam.id;
+          } else if (devices.length > 1) {
+            defaultCamId = devices[devices.length - 1].id;
+          }
+
           select.innerHTML = devices.map((cam, i) => `
-            <option value="${cam.id}">${cam.label || `Camera ${i + 1}`}</option>
+            <option value="${cam.id}" ${cam.id === defaultCamId ? 'selected' : ''}>${cam.label || `Camera ${i + 1}`}</option>
           `).join('');
         } else {
           select.innerHTML = `<option value="">Không phát hiện camera</option>`;
@@ -2151,7 +2406,8 @@
           aspectRatio: 1.0
         };
 
-        const camConfig = cameraId ? cameraId : { facingMode: "environment" };
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const camConfig = (cameraId && !isMobile) ? cameraId : { facingMode: "environment" };
 
         await html5QrScannerInstance.start(
           camConfig,
@@ -2403,7 +2659,7 @@
         showToast(res.message || 'Lưu thông tin thành công!', 'success');
         closeModal('deviceFormModal');
         // Đồng bộ lại dữ liệu
-        if (appState.isLive) {
+        if (appState.apiUrl) {
           fetchData();
         } else {
           renderAll();
@@ -2419,7 +2675,7 @@
       const res = await sendGasPost('deleteDevice', { id: deviceId });
       if (res && res.status === 'success') {
         showToast(`Đã xóa thiết bị ${deviceId}`, 'success');
-        if (appState.isLive) fetchData();
+        if (appState.apiUrl) fetchData();
         else renderAll();
       } else {
         showToast(res ? res.message : 'Lỗi xóa thiết bị', 'error');
@@ -2490,7 +2746,7 @@
       if (res && res.status === 'success') {
         showToast('Đã lưu nhật ký bảo trì và cập nhật thiết bị!', 'success');
         closeModal('historyLogModal');
-        if (appState.isLive) fetchData();
+        if (appState.apiUrl) fetchData();
         else renderAll();
       } else {
         showToast(res ? res.message : 'Có lỗi khi lưu nhật ký', 'error');
@@ -2813,6 +3069,67 @@
       document.getElementById('gasApiUrlInput').value = appState.apiUrl;
       document.getElementById('apiTestResult').classList.add('hidden');
       openModal('settingsModal');
+      setTimeout(() => {
+        generateMobileConfigQr();
+      }, 100);
+    }
+
+    /**
+     * Tự động sinh mã QR chứa URL Web App kèm tham số ?api=...
+     * Giúp điện thoại chỉ cần quét màn hình máy tính là tự kết nối Sheet ngay!
+     */
+    function generateMobileConfigQr() {
+      const inputUrl = (document.getElementById('gasApiUrlInput')?.value || appState.apiUrl || '').trim();
+      const container = document.getElementById('mobileShareQrContainer');
+      const shareUrlInput = document.getElementById('shareUrlInput');
+      if (!container) return;
+
+      if (!inputUrl) {
+        container.innerHTML = '<span class="text-[10px] text-slate-400 text-center px-2">Nhập URL API ở trên rồi lưu cấu hình để tạo mã QR</span>';
+        if (shareUrlInput) shareUrlInput.value = '';
+        return;
+      }
+
+      // Tạo URL đầy đủ kèm tham số ?api=
+      const baseUrl = window.location.origin + window.location.pathname;
+      const shareUrl = `${baseUrl}?api=${encodeURIComponent(inputUrl)}`;
+      if (shareUrlInput) shareUrlInput.value = shareUrl;
+
+      container.innerHTML = '';
+      try {
+        new QRCode(container, {
+          text: shareUrl,
+          width: 110,
+          height: 110,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch (e) {
+        console.warn('Lỗi tạo mã QR chia sẻ:', e);
+      }
+    }
+
+    function copyShareUrl() {
+      const shareUrlInput = document.getElementById('shareUrlInput');
+      if (!shareUrlInput || !shareUrlInput.value) {
+        showToast('Chưa có link cấu hình để sao chép!', 'warning');
+        return;
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrlInput.value).then(() => {
+          showToast('Đã sao chép link kèm cấu hình! Hãy gửi link này cho điện thoại qua Zalo/Tin nhắn.', 'success');
+        }).catch(() => {
+          shareUrlInput.select();
+          document.execCommand('copy');
+          showToast('Đã sao chép link cấu hình!', 'success');
+        });
+      } else {
+        shareUrlInput.select();
+        document.execCommand('copy');
+        showToast('Đã sao chép link cấu hình!', 'success');
+      }
     }
 
     async function testApiConnection() {
@@ -2837,13 +3154,22 @@
         url.searchParams.set('t', Date.now());
 
         const res = await fetch(url.toString(), {
-          headers: { 'Accept': 'application/json' }
+          mode: 'cors',
+          redirect: 'follow',
+          credentials: 'omit'
         });
-        const data = await res.json();
+        
+        const rawText = await res.text();
+        if (rawText.trim().startsWith('<!DOCTYPE') || rawText.includes('<html') || rawText.includes('accounts.google.com')) {
+          throw new Error('Web App yêu cầu đăng nhập Google. Hãy vào Apps Script -> Deploy -> Cấp quyền "Who has access: Anyone"!');
+        }
+
+        const data = JSON.parse(rawText);
 
         if (data && data.status === 'success') {
           resBox.className = 'p-3 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-300';
           resBox.innerHTML = `<strong><i class="fa-solid fa-circle-check"></i> Kết nối thành công!</strong><br>${data.message}`;
+          generateMobileConfigQr();
         } else {
           throw new Error(data.message || 'Phản hồi không hợp lệ');
         }
@@ -2921,14 +3247,27 @@
       views.forEach(v => {
         const viewEl = document.getElementById(`view-${v}`);
         const btnEl = document.getElementById(`tab-btn-${v}`);
+        const mobileBtnEl = document.getElementById(`mobile-nav-${v}`);
+
         if (v === tabId) {
-          viewEl.classList.remove('hidden');
-          btnEl.className = 'nav-tab px-3 py-2 rounded-md text-blue-400 bg-slate-800 flex items-center gap-2 whitespace-nowrap font-bold';
+          if (viewEl) viewEl.classList.remove('hidden');
+          if (btnEl) btnEl.className = 'nav-tab px-3 py-2 rounded-md text-blue-400 bg-slate-800 flex items-center gap-2 whitespace-nowrap font-bold';
+          if (mobileBtnEl) {
+            mobileBtnEl.classList.add('text-blue-400', 'font-bold');
+            mobileBtnEl.classList.remove('text-slate-400');
+          }
         } else {
-          viewEl.classList.add('hidden');
-          btnEl.className = 'nav-tab px-3 py-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2 whitespace-nowrap font-medium';
+          if (viewEl) viewEl.classList.add('hidden');
+          if (btnEl) btnEl.className = 'nav-tab px-3 py-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2 whitespace-nowrap font-medium';
+          if (mobileBtnEl) {
+            mobileBtnEl.classList.remove('text-blue-400', 'font-bold');
+            mobileBtnEl.classList.add('text-slate-400');
+          }
         }
       });
+
+      // Tự động cuộn lên đầu trang khi chuyển tab
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Tự động bật camera nếu vào tab scanner
       if (tabId === 'scanner') {
