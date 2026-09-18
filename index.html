@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Quản Lý Thiết Bị CNTT Nhà Máy | IT Asset Management</title>
+  <title>Quản Lý Thiết Bị CNTT Nhà Máy Long Khải | IT Asset Management</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -103,7 +103,7 @@
           </div>
           <div>
             <span class="font-bold text-lg tracking-tight text-white flex items-center gap-2">
-              IT ASSET PRO
+              ỨNG DỤNG QUẢN LÝ THIẾT BỊ CNTT
               <span class="text-xs bg-blue-500/20 text-blue-300 font-medium px-2 py-0.5 rounded border border-blue-400/30 hidden sm:inline">Nhà Máy</span>
             </span>
             <p class="text-xs text-slate-400 hidden sm:block">Quản Lý Thiết Bị CNTT & Cơ Sở Dữ Liệu Google Sheets</p>
@@ -133,6 +133,24 @@
           <button onclick="openSettingsModal()" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Cài đặt API">
             <i class="fa-solid fa-gear"></i>
           </button>
+
+          <!-- User Profile & Logout Button -->
+          <div class="h-6 w-px bg-slate-700 hidden sm:block"></div>
+          <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 px-2.5 py-1 rounded-lg bg-slate-800/90 border border-slate-700 text-xs">
+              <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                <i class="fa-solid fa-user-gear"></i>
+              </div>
+              <div class="hidden md:block text-left leading-tight">
+                <span id="headerUserName" class="font-bold text-white block truncate max-w-[130px]">Lê Tuấn IT</span>
+                <span id="headerUserRole" class="text-[10px] text-blue-300 font-medium block">Quản trị viên</span>
+              </div>
+            </div>
+            <button onclick="handleLogout()" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 text-xs sm:text-sm font-semibold rounded-lg transition active:scale-95" title="Đăng xuất khỏi hệ thống">
+              <i class="fa-solid fa-right-from-bracket"></i>
+              <span class="hidden sm:inline">Đăng xuất</span>
+            </button>
+          </div>
         </div>
 
       </div>
@@ -464,12 +482,9 @@
               </div>
             </div>
 
-            <!-- Quick Suggestions for Demo -->
-            <div class="text-xs text-slate-500 flex items-center gap-1.5 flex-wrap">
-              <span>Thử nhanh mã:</span>
-              <button onclick="quickSearchCode('AST-0001')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded font-mono text-blue-600">AST-0001</button>
-              <button onclick="quickSearchCode('AST-0002')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded font-mono text-blue-600">AST-0002</button>
-              <button onclick="quickSearchCode('AST-0005')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded font-mono text-blue-600">AST-0005</button>
+            <!-- Hướng dẫn tra cứu -->
+            <div class="text-[11px] text-slate-400 italic text-center pt-1">
+              <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i> Quét camera hoặc nhập chính xác mã Asset Tag để xem cấu hình & lịch sử bảo trì.
             </div>
 
           </div>
@@ -955,6 +970,85 @@
     </div>
   </div>
 
+  <!-- ================= MÀN HÌNH ĐĂNG NHẬP (LOGIN SCREEN) ================= -->
+  <div id="loginScreen" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md overflow-y-auto p-4 transition-all duration-300">
+    <div class="relative max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-6 sm:p-8 text-white my-6">
+      
+      <!-- Decorative Top Line -->
+      <div class="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 absolute top-0 left-0"></div>
+
+      <!-- Header / Logo -->
+      <div class="text-center mb-6">
+        <div class="inline-flex w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/40 items-center justify-center text-blue-400 text-2xl mb-3 shadow-lg shadow-blue-500/10">
+          <i class="fa-solid fa-server"></i>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white uppercase">ỨNG DỤNG QUẢN LÝ THIẾT BỊ CNTT</h2>
+        
+        <div class="inline-block mt-2 px-3 py-0.5 rounded-full text-[11px] font-medium bg-blue-500/10 text-blue-300 border border-blue-500/20">
+          <i class="fa-solid fa-shield-halved mr-1"></i> Xác Thực Truy Cập Nội Bộ
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        
+        <!-- Error Message Alert -->
+        <div id="loginErrorMessage" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+          <i class="fa-solid fa-circle-exclamation text-rose-400 flex-shrink-0 text-sm"></i>
+          <span id="loginErrorText" class="flex-1">Tên tài khoản hoặc mật khẩu không chính xác!</span>
+        </div>
+
+        <!-- Username Input -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+            Tên Tài Khoản <span class="text-rose-400">*</span>
+          </label>
+          <div class="relative">
+            <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="loginUsername" required autocomplete="username" placeholder="Nhập tên đăng nhập (VD: admin)" class="w-full pl-10 pr-4 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+          </div>
+        </div>
+
+        <!-- Password Input with show/hide toggle -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+            Mật Khẩu <span class="text-rose-400">*</span>
+          </label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Nhập mật khẩu" class="w-full pl-10 pr-11 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 transition" title="Ẩn/Hiện mật khẩu">
+              <i id="passwordToggleIcon" class="fa-solid fa-eye text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember Me Checkbox -->
+        <div class="flex items-center justify-between pt-1">
+          <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer select-none">
+            <input type="checkbox" id="loginRememberMe" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900">
+            <span>Ghi nhớ đăng nhập</span>
+          </label>
+          <span class="text-[11px] text-slate-500">Bảo mật xưởng</span>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="loginSubmitBtn" class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2 mt-2">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          <span>ĐĂNG NHẬP HỆ THỐNG</span>
+        </button>
+
+      </form>
+
+      
+      <!-- Security Notice -->
+      <p class="text-[10px] text-slate-500 text-center mt-4">
+        <i class="fa-solid fa-lock text-[9px] mr-1"></i> Kết nối nội bộ. Mọi hoạt động đều lưu nhật ký kiểm toán.
+      </p>
+
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
@@ -967,164 +1061,22 @@
      */
     const STORAGE_KEY_API_URL = 'IT_ASSET_GAS_URL';
     const STORAGE_KEY_LOCAL_DATA = 'IT_ASSET_LOCAL_CACHE';
+    const STORAGE_KEY_AUTH_USER = 'IT_ASSET_AUTH_USER';
+    const STORAGE_KEY_REMEMBERED_USERNAME = 'IT_ASSET_REMEMBERED_USERNAME';
 
-    // Dữ liệu mẫu chuẩn nhà máy
-    const MOCK_DEVICES = [
-      {
-        id: 'AST-0001',
-        name: 'Laptop Dell Latitude 5420',
-        category: 'Laptop',
-        serial_number: '8J2K1L3',
-        ip_mac: '192.168.1.105',
-        factory_area: 'Văn phòng IT',
-        assigned_to: 'Lê Tuấn IT (Admin)',
-        status: 'Đang sử dụng',
-        purchase_date: '2023-05-15',
-        notes: 'Core i5-1145G7, RAM 16GB, SSD 512GB NVMe'
-      },
-      {
-        id: 'AST-0002',
-        name: 'Máy in mã vạch Zebra ZD230',
-        category: 'Máy in tem',
-        serial_number: 'ZB23098711',
-        ip_mac: '192.168.20.12',
-        factory_area: 'Kho thành phẩm',
-        assigned_to: 'Bộ phận Kho / Logistics',
-        status: 'Đang sử dụng',
-        purchase_date: '2023-08-20',
-        notes: 'Dùng in nhãn thùng carton xuất khẩu, khổ 4x6 inch'
-      },
-      {
-        id: 'AST-0003',
-        name: 'Switch Cisco Catalyst 2960X 24P',
-        category: 'Switch',
-        serial_number: 'FCW2145B09X',
-        ip_mac: '192.168.1.2',
-        factory_area: 'Phòng Server',
-        assigned_to: 'Phòng CNTT',
-        status: 'Đang sử dụng',
-        purchase_date: '2022-01-10',
-        notes: 'Switch phân phối tầng 1 & khu vực Xưởng A'
-      },
-      {
-        id: 'AST-0004',
-        name: 'Máy tính để bàn HP ProDesk 400 G7',
-        category: 'PC',
-        serial_number: 'HP400G79981',
-        ip_mac: '192.168.10.33',
-        factory_area: 'Phòng QC',
-        assigned_to: 'Nguyễn Thị Mai (QC Lead)',
-        status: 'Đang sử dụng',
-        purchase_date: '2023-02-18',
-        notes: 'Kết nối máy đo kiểm CMM quang học'
-      },
-      {
-        id: 'AST-0005',
-        name: 'Máy kiểm kho Handheld Zebra TC21',
-        category: 'Thiết bị IoT/Handheld',
-        serial_number: 'TC21VN4401',
-        ip_mac: '192.168.20.45',
-        factory_area: 'Kho nguyên liệu',
-        assigned_to: 'Nguyễn Văn Bình (Thủ kho NL)',
-        status: 'Đang sửa chữa',
-        purchase_date: '2023-11-05',
-        notes: 'Bị rơi nứt kính quét Barcode, đang đợi linh kiện'
-      },
-      {
-        id: 'AST-0006',
-        name: 'Access Point Cisco Meraki MR46',
-        category: 'Access Point',
-        serial_number: 'Q2KD-9988-ABCD',
-        ip_mac: '192.168.1.50',
-        factory_area: 'Xưởng A',
-        assigned_to: 'Hạ tầng mạng xưởng sản xuất',
-        status: 'Đang sử dụng',
-        purchase_date: '2023-06-12',
-        notes: 'Phát wifi cho xe tự hành AGV và máy quét mã vạch'
-      },
-      {
-        id: 'AST-0007',
-        name: 'Laptop ThinkPad E14 Gen 4',
-        category: 'Laptop',
-        serial_number: 'PF399182',
-        ip_mac: '',
-        factory_area: 'Kho IT',
-        assigned_to: 'Bộ phận IT',
-        status: 'Dự phòng trong kho',
-        purchase_date: '2024-01-15',
-        notes: 'Máy dự phòng cho quản đốc mới hoặc thay thế gấp'
-      },
-      {
-        id: 'AST-0008',
-        name: 'Máy in đa năng HP LaserJet M428fdw',
-        category: 'Máy in văn phòng',
-        serial_number: 'VNB3K88712',
-        ip_mac: '192.168.10.200',
-        factory_area: 'Văn phòng Giám đốc xưởng',
-        assigned_to: 'Khối Quản lý sản xuất',
-        status: 'Đang sử dụng',
-        purchase_date: '2022-09-01',
-        notes: 'In, Scan 2 mặt, Copy lệnh sản xuất hàng ngày'
-      },
-      {
-        id: 'AST-0009',
-        name: 'Màn hình Dell UltraSharp U2422H',
-        category: 'Màn hình',
-        serial_number: 'CN-0R66T1',
-        ip_mac: '',
-        factory_area: 'Kho IT',
-        assigned_to: 'Bộ phận IT',
-        status: 'Hỏng/Chờ thanh lý',
-        purchase_date: '2020-04-10',
-        notes: 'Cháy panel màn hình, chi phí thay cao hơn mua mới'
-      }
+    // Danh sách tài khoản đăng nhập mặc định (Hỗ trợ xác thực Demo / Offline)
+    const DEFAULT_ACCOUNTS = [
+      { username: 'admin', password: 'admin123', full_name: 'Quản trị viên IT', role: 'Quản trị viên' },
+      { username: 'kythuat', password: 'it123', full_name: 'Kỹ thuật viên xưởng', role: 'Kỹ thuật viên' }
     ];
 
-    const MOCK_HISTORY = [
-      {
-        log_id: 'LOG-0001',
-        device_id: 'AST-0001',
-        action_type: 'Bàn giao',
-        date: '2023-05-15 08:30:00',
-        performed_by: 'Admin IT',
-        description: 'Bàn giao máy tính mới cho IT Support Lê Tuấn sử dụng làm việc.'
-      },
-      {
-        log_id: 'LOG-0002',
-        device_id: 'AST-0002',
-        action_type: 'Bảo dưỡng',
-        date: '2024-01-10 14:00:00',
-        performed_by: 'Lê Tuấn IT',
-        description: 'Vệ sinh đầu in nhiệt bằng cồn Isopropyl, chỉnh lại trục cuộn nhãn.'
-      },
-      {
-        log_id: 'LOG-0003',
-        device_id: 'AST-0005',
-        action_type: 'Báo hỏng / Sửa chữa',
-        date: '2024-03-02 10:15:00',
-        performed_by: 'Lê Tuấn IT',
-        description: 'Tiếp nhận từ Kho nguyên liệu: Rơi vỡ mặt kính quét camera. Gửi hãng báo giá thay cụm kính.'
-      },
-      {
-        log_id: 'LOG-0004',
-        device_id: 'AST-0004',
-        action_type: 'Bảo dưỡng',
-        date: '2024-03-12 16:45:00',
-        performed_by: 'Lê Tuấn IT',
-        description: 'Vệ sinh bụi quạt tản nhiệt, cập nhật bản vá Windows và driver máy CMM.'
-      },
-      {
-        log_id: 'LOG-0005',
-        device_id: 'AST-0009',
-        action_type: 'Báo hỏng / Sửa chữa',
-        date: '2024-02-20 09:00:00',
-        performed_by: 'Lê Tuấn IT',
-        description: 'Màn hình chớp tắt rồi mất nguồn hoàn toàn. Đã lập biên bản chờ thanh lý tài sản.'
-      }
-    ];
+    // Dữ liệu thiết bị & lịch sử khởi đầu (Để trống theo yêu cầu - không chứa dữ liệu mẫu)
+    const MOCK_DEVICES = [];
+    const MOCK_HISTORY = [];
 
     // Global State
     let appState = {
+      currentUser: null,
       devices: [],
       history: [],
       apiUrl: localStorage.getItem(STORAGE_KEY_API_URL) || '',
@@ -1142,7 +1094,7 @@
 
     /**
      * =========================================================================
-     * 2. KHỞI TẠO ỨNG DỤNG
+     * 2. KHỞI TẠO ỨNG DỤNG & XÁC THỰC NGƯỜI DÙNG
      * =========================================================================
      */
     window.addEventListener('DOMContentLoaded', () => {
@@ -1151,25 +1103,249 @@
       // Khởi tạo âm thanh beep qua Web Audio API
       initAudioBeep();
 
-      // Đọc dữ liệu ban đầu
-      if (appState.apiUrl && appState.apiUrl.trim().startsWith('http')) {
-        fetchData();
-      } else {
-        // Tải mock data nếu chưa có URL
-        loadMockData();
-      }
-
       // Khởi tạo camera list
       initCameraList();
+
+      // Kiểm tra trạng thái đăng nhập
+      checkAuthState();
     });
+
+    /**
+     * Kiểm tra phiên đăng nhập hiện tại
+     */
+    function checkAuthState() {
+      // Ưu tiên đọc từ localStorage (nếu có Ghi nhớ đăng nhập), sau đó tới sessionStorage
+      let savedUserStr = localStorage.getItem(STORAGE_KEY_AUTH_USER) || sessionStorage.getItem(STORAGE_KEY_AUTH_USER);
+      
+      if (savedUserStr) {
+        try {
+          const user = JSON.parse(savedUserStr);
+          if (user && user.username) {
+            setAuthenticatedUser(user, false);
+            
+            // Đã đăng nhập -> Tải dữ liệu
+            if (appState.apiUrl && appState.apiUrl.trim().startsWith('http')) {
+              fetchData();
+            } else {
+              loadMockData();
+            }
+            return;
+          }
+        } catch (e) {
+          console.warn('Lỗi đọc dữ liệu người dùng đã lưu:', e);
+        }
+      }
+
+      // Chưa đăng nhập: Mở màn hình đăng nhập
+      const loginScreen = document.getElementById('loginScreen');
+      if (loginScreen) loginScreen.classList.remove('hidden');
+
+      // Điền sẵn tên tài khoản nếu đã ghi nhớ trước đó
+      const rememberedUsername = localStorage.getItem(STORAGE_KEY_REMEMBERED_USERNAME);
+      if (rememberedUsername) {
+        const usernameInput = document.getElementById('loginUsername');
+        const rememberCheckbox = document.getElementById('loginRememberMe');
+        if (usernameInput) usernameInput.value = rememberedUsername;
+        if (rememberCheckbox) rememberCheckbox.checked = true;
+        const passInput = document.getElementById('loginPassword');
+        if (passInput) passInput.focus();
+      } else {
+        const usernameInput = document.getElementById('loginUsername');
+        if (usernameInput) usernameInput.focus();
+      }
+    }
+
+    /**
+     * Thiết lập thông tin người dùng sau khi xác thực thành công
+     */
+    function setAuthenticatedUser(user, isFirstLogin = true) {
+      appState.currentUser = user;
+
+      // Cập nhật thông tin trên thanh Header
+      const nameEl = document.getElementById('headerUserName');
+      const roleEl = document.getElementById('headerUserRole');
+      if (nameEl) nameEl.innerText = user.full_name || user.username;
+      if (roleEl) roleEl.innerText = user.role || 'Kỹ thuật viên';
+
+      // Tự động điền người thực hiện mặc định trong các Form
+      const defaultTechnician = user.full_name || user.username || 'IT Support';
+      const formPerformedBy = document.getElementById('formPerformedBy');
+      if (formPerformedBy) formPerformedBy.value = defaultTechnician;
+
+      const histPerformedBy = document.getElementById('histPerformedBy');
+      if (histPerformedBy) histPerformedBy.value = defaultTechnician;
+
+      // Ẩn màn hình đăng nhập
+      const loginScreen = document.getElementById('loginScreen');
+      if (loginScreen) loginScreen.classList.add('hidden');
+
+      if (isFirstLogin) {
+        showToast(`Đăng nhập thành công! Xin chào ${user.full_name || user.username}`, 'success');
+      }
+    }
+
+    /**
+     * Xử lý đăng nhập tài khoản
+     */
+    async function handleLogin(event) {
+      event.preventDefault();
+
+      const usernameInput = document.getElementById('loginUsername');
+      const passwordInput = document.getElementById('loginPassword');
+      const rememberCheckbox = document.getElementById('loginRememberMe');
+      const errorBox = document.getElementById('loginErrorMessage');
+      const errorText = document.getElementById('loginErrorText');
+      const submitBtn = document.getElementById('loginSubmitBtn');
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+      const isRemember = rememberCheckbox.checked;
+
+      if (!username || !password) {
+        errorText.innerText = 'Vui lòng điền đầy đủ tên tài khoản và mật khẩu!';
+        errorBox.classList.remove('hidden');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>Đang xác thực...</span>`;
+      errorBox.classList.add('hidden');
+
+      let authenticatedUser = null;
+
+      // Nếu đang cấu hình Google Apps Script Live API
+      if (appState.apiUrl && appState.apiUrl.startsWith('http')) {
+        try {
+          const res = await sendGasPost('login', { username: username, password: password });
+          if (res && res.status === 'success' && res.user) {
+            authenticatedUser = res.user;
+          } else if (res && res.message && !res.message.includes('không xác định')) {
+            errorText.innerText = res.message;
+            errorBox.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> <span>ĐĂNG NHẬP HỆ THỐNG</span>`;
+            return;
+          }
+        } catch (err) {
+          console.warn('Lỗi gọi API login, chuyển sang kiểm tra tài khoản cục bộ:', err);
+        }
+      }
+
+      // Kiểm tra danh sách tài khoản mặc định (hỗ trợ Demo / Offline)
+      if (!authenticatedUser) {
+        const localMatch = DEFAULT_ACCOUNTS.find(
+          acc => acc.username.toLowerCase() === username.toLowerCase() && acc.password === password
+        );
+        if (localMatch) {
+          authenticatedUser = {
+            username: localMatch.username,
+            full_name: localMatch.full_name,
+            role: localMatch.role
+          };
+        }
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> <span>ĐĂNG NHẬP HỆ THỐNG</span>`;
+
+      if (!authenticatedUser) {
+        errorText.innerText = 'Tên tài khoản hoặc mật khẩu không chính xác!';
+        errorBox.classList.remove('hidden');
+        passwordInput.focus();
+        return;
+      }
+
+      // Lưu phiên đăng nhập
+      const userJson = JSON.stringify(authenticatedUser);
+      if (isRemember) {
+        localStorage.setItem(STORAGE_KEY_AUTH_USER, userJson);
+        localStorage.setItem(STORAGE_KEY_REMEMBERED_USERNAME, username);
+        sessionStorage.removeItem(STORAGE_KEY_AUTH_USER);
+      } else {
+        sessionStorage.setItem(STORAGE_KEY_AUTH_USER, userJson);
+        localStorage.removeItem(STORAGE_KEY_AUTH_USER);
+      }
+
+      setAuthenticatedUser(authenticatedUser, true);
+
+      // Tải dữ liệu nếu chưa tải
+      if (appState.devices.length === 0) {
+        if (appState.apiUrl && appState.apiUrl.startsWith('http')) {
+          fetchData();
+        } else {
+          loadMockData();
+        }
+      }
+    }
+
+    /**
+     * Xử lý đăng xuất tài khoản
+     */
+    function handleLogout() {
+      if (!confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) return;
+
+      // Xóa thông tin xác thực
+      localStorage.removeItem(STORAGE_KEY_AUTH_USER);
+      sessionStorage.removeItem(STORAGE_KEY_AUTH_USER);
+      appState.currentUser = null;
+
+      // Dừng camera nếu đang quét
+      if (isCameraRunning) {
+        stopCameraScanner();
+      }
+
+      // Reset form đăng nhập
+      const passInput = document.getElementById('loginPassword');
+      if (passInput) passInput.value = '';
+      const errorBox = document.getElementById('loginErrorMessage');
+      if (errorBox) errorBox.classList.add('hidden');
+
+      // Mở lại màn hình đăng nhập
+      const loginScreen = document.getElementById('loginScreen');
+      if (loginScreen) loginScreen.classList.remove('hidden');
+
+      showToast('Đã đăng xuất khỏi hệ thống thành công!', 'info');
+    }
+
+    /**
+     * Ẩn / Hiện mật khẩu khi người dùng bấm biểu tượng con mắt
+     */
+    function togglePasswordVisibility() {
+      const passInput = document.getElementById('loginPassword');
+      const icon = document.getElementById('passwordToggleIcon');
+      if (!passInput || !icon) return;
+
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash text-sm text-blue-400';
+      } else {
+        passInput.type = 'password';
+        icon.className = 'fa-solid fa-eye text-sm text-slate-400';
+      }
+    }
+
+    /**
+     * Tự động điền nhanh tài khoản mẫu để thử nghiệm
+     */
+    function fillQuickLogin(username, password) {
+      const userInput = document.getElementById('loginUsername');
+      const passInput = document.getElementById('loginPassword');
+      const errorBox = document.getElementById('loginErrorMessage');
+
+      if (userInput) userInput.value = username;
+      if (passInput) passInput.value = password;
+      if (errorBox) errorBox.classList.add('hidden');
+
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      if (submitBtn) submitBtn.focus();
+    }
 
     function loadMockData() {
       appState.devices = [...MOCK_DEVICES];
       appState.history = [...MOCK_HISTORY];
       appState.isLive = false;
-      updateConnectionBadge(false);
+      updateConnectionBadge(false, 'Chế độ Demo');
       renderAll();
-      showToast('Đang chạy ở Chế độ Demo với dữ liệu mẫu nhà máy', 'info');
     }
 
     /**
@@ -1351,6 +1527,8 @@
      * Render Biểu Đồ Thống Kê (Chart.js)
      */
     function renderCharts() {
+      const hasData = appState.devices.length > 0;
+
       // 1. Biểu đồ Khu vực
       const areaCounts = {};
       appState.devices.forEach(d => {
@@ -1358,8 +1536,8 @@
         areaCounts[a] = (areaCounts[a] || 0) + 1;
       });
 
-      const areaLabels = Object.keys(areaCounts);
-      const areaData = Object.values(areaCounts);
+      const areaLabels = hasData ? Object.keys(areaCounts) : ['Chưa có dữ liệu'];
+      const areaData = hasData ? Object.values(areaCounts) : [0];
 
       const ctxArea = document.getElementById('chartArea');
       if (ctxArea) {
@@ -1370,9 +1548,9 @@
             labels: areaLabels,
             datasets: [{
               data: areaData,
-              backgroundColor: [
+              backgroundColor: hasData ? [
                 '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'
-              ],
+              ] : ['#e2e8f0'],
               borderWidth: 2,
               borderColor: '#ffffff'
             }]
@@ -1395,8 +1573,8 @@
         catCounts[c] = (catCounts[c] || 0) + 1;
       });
 
-      const catLabels = Object.keys(catCounts);
-      const catData = Object.values(catCounts);
+      const catLabels = hasData ? Object.keys(catCounts) : ['Chưa có dữ liệu'];
+      const catData = hasData ? Object.values(catCounts) : [0];
 
       const ctxCat = document.getElementById('chartCategory');
       if (ctxCat) {
@@ -1408,7 +1586,7 @@
             datasets: [{
               label: 'Số lượng máy',
               data: catData,
-              backgroundColor: '#0ea5e9',
+              backgroundColor: hasData ? '#0ea5e9' : '#e2e8f0',
               borderRadius: 6
             }]
           },
@@ -1521,11 +1699,15 @@
       const total = items.length;
 
       if (total === 0) {
+        const hasFilter = document.getElementById('searchInput').value || document.getElementById('filterCategory').value || document.getElementById('filterArea').value || document.getElementById('filterStatus').value;
+        const emptyMsg = hasFilter 
+          ? 'Không tìm thấy thiết bị nào phù hợp với điều kiện tìm kiếm.' 
+          : 'Chưa có thiết bị nào trong hệ thống. Nhấn nút "+ Thêm Mới" để bắt đầu nhập dữ liệu thiết bị!';
         tbody.innerHTML = `
           <tr>
-            <td colspan="9" class="text-center py-12 text-slate-400 text-sm">
-              <i class="fa-solid fa-box-open text-3xl mb-2 block"></i>
-              Không tìm thấy thiết bị nào phù hợp với điều kiện tìm kiếm.
+            <td colspan="9" class="text-center py-14 text-slate-400 text-sm">
+              <i class="fa-solid fa-folder-open text-3xl mb-2 block text-slate-300"></i>
+              ${emptyMsg}
             </td>
           </tr>
         `;
