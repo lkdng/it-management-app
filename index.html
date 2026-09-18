@@ -1,0 +1,2323 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quản Lý Thiết Bị CNTT Nhà Máy | IT Asset Management</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            },
+            factory: {
+              steel: '#334155',
+              dark: '#0f172a',
+              amber: '#d97706',
+              teal: '#0d9488'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- html5-qrcode: Camera QR Scanner -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <!-- qrcode.js: Generate QR Code for printing labels -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    
+    /* Animation laser quét QR */
+    @keyframes scanline {
+      0% { top: 0%; opacity: 0.8; }
+      50% { top: 96%; opacity: 1; }
+      100% { top: 0%; opacity: 0.8; }
+    }
+    .scanner-laser {
+      position: absolute;
+      left: 4%;
+      right: 4%;
+      height: 3px;
+      background: linear-gradient(90deg, rgba(239,68,68,0) 0%, rgba(239,68,68,1) 50%, rgba(239,68,68,0) 100%);
+      box-shadow: 0 0 12px 2px rgba(239, 68, 68, 0.8);
+      animation: scanline 2.2s infinite ease-in-out;
+    }
+
+    /* Print styling cho Tem nhãn Asset Tag */
+    @media print {
+      body * { visibility: hidden; }
+      #printable-label, #printable-label * { visibility: visible; }
+      #printable-label {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 8px;
+        box-shadow: none !important;
+        border: 2px solid #000 !important;
+      }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+
+<body class="min-h-full flex flex-col text-slate-800 bg-slate-100">
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo & Title -->
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
+          <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+            <i class="fa-solid fa-server text-white text-lg"></i>
+          </div>
+          <div>
+            <span class="font-bold text-lg tracking-tight text-white flex items-center gap-2">
+              IT ASSET PRO
+              <span class="text-xs bg-blue-500/20 text-blue-300 font-medium px-2 py-0.5 rounded border border-blue-400/30 hidden sm:inline">Nhà Máy</span>
+            </span>
+            <p class="text-xs text-slate-400 hidden sm:block">Quản Lý Thiết Bị CNTT & Cơ Sở Dữ Liệu Google Sheets</p>
+          </div>
+        </div>
+
+        <!-- Connection Status & Quick Actions -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          <!-- Status Badge -->
+          <div id="connectionStatusBadge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 cursor-pointer" onclick="openSettingsModal()" title="Nhấn để cấu hình kết nối">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span id="connectionStatusText" class="hidden xs:inline">Chế độ Demo</span>
+          </div>
+
+          <!-- Quick QR Scan Button -->
+          <button onclick="switchTab('scanner')" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-lg shadow transition active:scale-95">
+            <i class="fa-solid fa-qrcode text-base"></i>
+            <span class="hidden sm:inline">Quét QR</span>
+          </button>
+
+          <!-- Sync Refresh Button -->
+          <button onclick="fetchData(true)" id="syncBtn" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Đồng bộ dữ liệu">
+            <i class="fa-solid fa-rotate"></i>
+          </button>
+
+          <!-- Settings Button -->
+          <button onclick="openSettingsModal()" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Cài đặt API">
+            <i class="fa-solid fa-gear"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Main Navigation Tabs -->
+      <nav class="flex space-x-1 sm:space-x-4 border-t border-slate-800 py-1 overflow-x-auto text-sm font-medium">
+        <button id="tab-btn-dashboard" onclick="switchTab('dashboard')" class="nav-tab px-3 py-2 rounded-md text-blue-400 bg-slate-800 flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Tổng quan</span>
+        </button>
+        <button id="tab-btn-devices" onclick="switchTab('devices')" class="nav-tab px-3 py-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-laptop"></i>
+          <span>Danh sách thiết bị</span>
+          <span id="tabCountBadge" class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+        </button>
+        <button id="tab-btn-scanner" onclick="switchTab('scanner')" class="nav-tab px-3 py-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-camera"></i>
+          <span>Quét mã QR</span>
+        </button>
+        <button id="tab-btn-history" onclick="switchTab('history')" class="nav-tab px-3 py-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Nhật ký bảo trì</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT AREA ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- 1. TAB: DASHBOARD & THỐNG KÊ -->
+    <section id="view-dashboard" class="space-y-6">
+      
+      <!-- Top KPI Stat Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <!-- Card 1: Tổng thiết bị -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng Thiết Bị</p>
+            <h3 id="statTotalDevices" class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">0</h3>
+            <p class="text-xs text-blue-600 font-medium mt-1 flex items-center gap-1">
+              <i class="fa-solid fa-boxes-stacked"></i> Tài sản kiểm kê
+            </p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-microchip"></i>
+          </div>
+        </div>
+
+        <!-- Card 2: Đang hoạt động -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Đang Sử Dụng</p>
+            <h3 id="statActiveDevices" class="text-2xl sm:text-3xl font-bold text-emerald-600 mt-1">0</h3>
+            <p id="statActivePercent" class="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
+              <i class="fa-solid fa-circle-check"></i> 0% hoạt động
+            </p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-user-check"></i>
+          </div>
+        </div>
+
+        <!-- Card 3: Dự phòng trong kho -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Dự Phòng Trong Kho</p>
+            <h3 id="statSpareDevices" class="text-2xl sm:text-3xl font-bold text-indigo-600 mt-1">0</h3>
+            <p class="text-xs text-indigo-600 font-medium mt-1 flex items-center gap-1">
+              <i class="fa-solid fa-warehouse"></i> Sẵn sàng cấp phát
+            </p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-box-archive"></i>
+          </div>
+        </div>
+
+        <!-- Card 4: Đang sửa chữa / Chờ thanh lý -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sửa Chữa / Cần Xử Lý</p>
+            <h3 id="statMaintenanceDevices" class="text-2xl sm:text-3xl font-bold text-amber-600 mt-1">0</h3>
+            <p id="statScrapCount" class="text-xs text-amber-600 font-medium mt-1 flex items-center gap-1">
+              <i class="fa-solid fa-triangle-exclamation"></i> 0 máy hỏng/thanh lý
+            </p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Chart 1: Phân bổ theo Khu Vực / Phân Xưởng -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="font-semibold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-industry text-blue-600"></i>
+              Phân Bổ Thiết Bị Theo Khu Vực / Xưởng
+            </h4>
+            <span class="text-xs text-slate-400">Vị trí thực tế</span>
+          </div>
+          <div class="h-64 relative flex items-center justify-center">
+            <canvas id="chartArea"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Phân bổ theo Chủng Loại Thiết Bị -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="font-semibold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-layer-group text-emerald-600"></i>
+              Phân Bổ Theo Chủng Loại Thiết Bị
+            </h4>
+            <span class="text-xs text-slate-400">Thiết bị CNTT</span>
+          </div>
+          <div class="h-64 relative flex items-center justify-center">
+            <canvas id="chartCategory"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Activities & Quick Scan Banner -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: 5 Recent Logs -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="font-semibold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i>
+              Hoạt Động Bảo Trì & Điều Chuyển Gần Đây
+            </h4>
+            <button onclick="switchTab('history')" class="text-xs text-blue-600 hover:underline font-medium">Xem tất cả</button>
+          </div>
+          <div id="recentActivityList" class="space-y-3">
+            <!-- Render via JS -->
+            <div class="text-center py-6 text-slate-400 text-sm">Đang tải lịch sử gần đây...</div>
+          </div>
+        </div>
+
+        <!-- Right: Mobile Fast QR Scanner CTA -->
+        <div class="bg-gradient-to-br from-blue-700 to-indigo-900 rounded-xl shadow-sm p-6 text-white flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl mb-4 backdrop-blur-sm">
+              <i class="fa-solid fa-qrcode text-emerald-300"></i>
+            </div>
+            <h4 class="text-xl font-bold mb-2">Kiểm Kê Nhanh Bằng QR Code</h4>
+            <p class="text-sm text-blue-100 leading-relaxed">
+              Sử dụng camera điện thoại hoặc máy tính bảng để quét mã tem dán trên thân máy. Hệ thống tự động tra cứu thông số kỹ thuật và lịch sử bảo dưỡng ngay tại xưởng!
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-white/10 space-y-2">
+            <button onclick="switchTab('scanner')" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg shadow-md transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-camera"></i> Mở Camera Quét Ngay
+            </button>
+            <button onclick="openDeviceModal('add')" class="w-full py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition text-sm flex items-center justify-center gap-2">
+              <i class="fa-solid fa-plus"></i> Thêm Thiết Bị Mới
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- 2. TAB: DANH SÁCH THIẾT BỊ (DEVICES TABLE) -->
+    <section id="view-devices" class="hidden space-y-4">
+      
+      <!-- Action & Filter Bar -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+          
+          <!-- Search Bar -->
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Tìm kiếm theo Tên máy, Mã Asset Tag, S/N, IP/MAC, Người dùng..." class="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+            <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Filters -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <!-- Category Filter -->
+            <select id="filterCategory" onchange="applyFilters()" class="text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">Tất cả loại máy</option>
+              <option value="Laptop">Laptop</option>
+              <option value="PC">PC</option>
+              <option value="Máy in tem">Máy in tem</option>
+              <option value="Máy in văn phòng">Máy in văn phòng</option>
+              <option value="Switch">Switch</option>
+              <option value="Access Point">Access Point</option>
+              <option value="Màn hình">Màn hình</option>
+              <option value="Thiết bị IoT/Handheld">Handheld / IoT</option>
+            </select>
+
+            <!-- Area Filter -->
+            <select id="filterArea" onchange="applyFilters()" class="text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">Tất cả khu vực</option>
+              <option value="Xưởng A">Xưởng A</option>
+              <option value="Kho thành phẩm">Kho thành phẩm</option>
+              <option value="Kho nguyên liệu">Kho nguyên liệu</option>
+              <option value="Phòng QC">Phòng QC</option>
+              <option value="Văn phòng IT">Văn phòng IT</option>
+              <option value="Phòng Server">Phòng Server</option>
+              <option value="Kho IT">Kho IT</option>
+            </select>
+
+            <!-- Status Filter -->
+            <select id="filterStatus" onchange="applyFilters()" class="col-span-2 sm:col-span-1 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">Tất cả trạng thái</option>
+              <option value="Đang sử dụng">Đang sử dụng</option>
+              <option value="Dự phòng trong kho">Dự phòng trong kho</option>
+              <option value="Đang sửa chữa">Đang sửa chữa</option>
+              <option value="Hỏng/Chờ thanh lý">Hỏng/Chờ thanh lý</option>
+            </select>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex items-center gap-2">
+            <button onclick="openDeviceModal('add')" class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-plus"></i> Thêm Mới
+            </button>
+            <button onclick="exportToCsv()" class="p-2 border border-slate-300 hover:bg-slate-100 rounded-lg text-slate-700 text-sm transition" title="Xuất dữ liệu Excel/CSV">
+              <i class="fa-solid fa-file-excel text-emerald-600"></i>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto min-h-[380px]">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-800 text-white uppercase text-[11px] tracking-wider font-semibold">
+                <th class="py-3 px-4 text-center w-12">STT</th>
+                <th class="py-3 px-4">Mã Tài Sản</th>
+                <th class="py-3 px-4">Tên Thiết Bị</th>
+                <th class="py-3 px-4 hidden md:table-cell">Chủng Loại</th>
+                <th class="py-3 px-4 hidden sm:table-cell">Khu Vực</th>
+                <th class="py-3 px-4">Người Quản Lý</th>
+                <th class="py-3 px-4 hidden lg:table-cell">IP / MAC</th>
+                <th class="py-3 px-4">Trạng Thái</th>
+                <th class="py-3 px-4 text-center">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="devicesTableBody" class="divide-y divide-slate-100">
+              <!-- Render via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination & Counter Footer -->
+        <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-slate-600">
+          <div>
+            Hiển thị <span id="pageRangeText" class="font-bold text-slate-800">0 - 0</span> trong tổng số <span id="pageTotalText" class="font-bold text-slate-800">0</span> thiết bị
+          </div>
+          <div class="flex items-center space-x-1" id="paginationControls">
+            <!-- Render pagination buttons via JS -->
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 3. TAB: QUÉT MÃ QR (CAMERA QR SCANNER) -->
+    <section id="view-scanner" class="hidden space-y-6">
+      <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        
+        <!-- Header Scanner -->
+        <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-camera text-emerald-400 text-lg"></i>
+            <h3 class="font-bold text-base">Trình Quét Mã QR Camera</h3>
+          </div>
+          <span id="scanStatusBadge" class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">
+            Sẵn sàng
+          </span>
+        </div>
+
+        <!-- Camera Viewport Box -->
+        <div class="p-4 sm:p-6 flex flex-col items-center">
+          
+          <!-- Viewport Wrapper with Scan Guide Overlay -->
+          <div class="relative w-full max-w-sm aspect-square bg-black rounded-2xl overflow-hidden shadow-inner flex items-center justify-center border-4 border-slate-800">
+            
+            <!-- html5-qrcode video container -->
+            <div id="qr-reader" class="w-full h-full"></div>
+
+            <!-- Laser Scanning Beam (active when camera running) -->
+            <div id="scannerLaser" class="scanner-laser hidden"></div>
+
+            <!-- Viewfinder Corners -->
+            <div class="pointer-events-none absolute inset-6 border-2 border-dashed border-white/60 rounded-xl flex items-center justify-center">
+              <div class="text-center text-white/70 text-xs px-4">
+                <i class="fa-solid fa-expand text-2xl mb-1 text-emerald-400"></i>
+                <p>Đặt mã QR hoặc Barcode tài sản vào giữa khung</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Camera Controls -->
+          <div class="w-full max-w-sm mt-4 space-y-3">
+            
+            <!-- Camera selection & Toggle Flash -->
+            <div class="flex gap-2">
+              <select id="cameraSelect" class="flex-1 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-700 focus:outline-none">
+                <option value="">Đang tìm camera...</option>
+              </select>
+
+              <button id="toggleCameraBtn" onclick="toggleCamera()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition flex items-center gap-1.5">
+                <i class="fa-solid fa-power-off"></i>
+                <span id="toggleCameraText">Bật Camera</span>
+              </button>
+            </div>
+
+            <!-- Manual Asset Tag Input Fallback -->
+            <div class="pt-3 border-t border-slate-200">
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Hoặc nhập mã Asset Tag thủ công:</label>
+              <div class="flex gap-2">
+                <input type="text" id="manualAssetTagInput" placeholder="VD: AST-0001" class="flex-1 uppercase text-sm px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="handleManualAssetSearch()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-semibold rounded-lg transition">
+                  Tra cứu
+                </button>
+              </div>
+            </div>
+
+            <!-- Quick Suggestions for Demo -->
+            <div class="text-xs text-slate-500 flex items-center gap-1.5 flex-wrap">
+              <span>Thử nhanh mã:</span>
+              <button onclick="quickSearchCode('AST-0001')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded font-mono text-blue-600">AST-0001</button>
+              <button onclick="quickSearchCode('AST-0002')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded font-mono text-blue-600">AST-0002</button>
+              <button onclick="quickSearchCode('AST-0005')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded font-mono text-blue-600">AST-0005</button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4. TAB: NHẬT KÝ BẢO TRÌ & ĐIỀU CHUYỂN TOÀN HỆ THỐNG -->
+    <section id="view-history" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
+              <i class="fa-solid fa-clipboard-list"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">Toàn Bộ Lịch Sử Bảo Trì & Điều Chuyển</h3>
+              <p class="text-xs text-slate-500">Nhật ký truy vết bảo dưỡng tài sản nhà máy</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <input type="text" id="historySearchInput" oninput="renderHistoryTable()" placeholder="Lọc nhật ký, kỹ thuật viên, mã máy..." class="w-full sm:w-64 px-3 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+            <select id="historyFilterAction" onchange="renderHistoryTable()" class="text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none">
+              <option value="">Tất cả loại hành động</option>
+              <option value="Bảo dưỡng">Bảo dưỡng</option>
+              <option value="Bàn giao">Bàn giao</option>
+              <option value="Thu hồi">Thu hồi</option>
+              <option value="Báo hỏng / Sửa chữa">Báo hỏng / Sửa chữa</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Table -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto min-h-[350px]">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-teal-800 text-white uppercase text-[11px] tracking-wider font-semibold">
+                <th class="py-3 px-4 w-12 text-center">STT</th>
+                <th class="py-3 px-4">Mã Log</th>
+                <th class="py-3 px-4">Mã Thiết Bị</th>
+                <th class="py-3 px-4">Hành Động</th>
+                <th class="py-3 px-4">Ngày Thực Hiện</th>
+                <th class="py-3 px-4">Kỹ Thuật Viên</th>
+                <th class="py-3 px-4">Nội Dung Chi Tiết / Linh Kiện</th>
+                <th class="py-3 px-4 text-center">Xem</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody" class="divide-y divide-slate-100">
+              <!-- Render via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. MODAL CHI TIẾT THIẾT BỊ & LỊCH SỬ BẢO DƯỠNG -->
+  <div id="deviceDetailModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 my-8">
+      
+      <!-- Header -->
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white text-lg">
+            <i class="fa-solid fa-laptop-code"></i>
+          </div>
+          <div>
+            <h3 id="detailDeviceName" class="font-bold text-base sm:text-lg leading-tight">Laptop Dell Latitude</h3>
+            <span id="detailDeviceTag" class="text-xs font-mono bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-400/30">AST-0001</span>
+          </div>
+        </div>
+        <button onclick="closeModal('deviceDetailModal')" class="text-slate-400 hover:text-white text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+        
+        <!-- Status & Badge row -->
+        <div class="flex flex-wrap items-center justify-between gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+          <div>
+            <span class="text-xs text-slate-500 block">Trạng thái hiện tại:</span>
+            <span id="detailStatusBadge" class="inline-block mt-1 px-3 py-1 text-xs font-bold rounded-full"></span>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-500 block">Khu vực / Phân xưởng:</span>
+            <span id="detailArea" class="text-sm font-semibold text-slate-800"></span>
+          </div>
+        </div>
+
+        <!-- Specs Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+          <div>
+            <span class="text-slate-400 block text-xs">Chủng loại:</span>
+            <span id="detailCategory" class="font-semibold text-slate-800"></span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs">Số Serial (S/N):</span>
+            <span id="detailSerial" class="font-mono font-semibold text-slate-800"></span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs">Địa chỉ IP / MAC:</span>
+            <span id="detailIpMac" class="font-mono text-slate-800"></span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs">Người / Bộ phận quản lý:</span>
+            <span id="detailAssigned" class="font-semibold text-slate-800"></span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs">Ngày mua / Bàn giao:</span>
+            <span id="detailPurchaseDate" class="text-slate-800"></span>
+          </div>
+          <div class="sm:col-span-2">
+            <span class="text-slate-400 block text-xs">Ghi chú kỹ thuật / Cấu hình:</span>
+            <p id="detailNotes" class="mt-1 p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-slate-700 text-xs italic"></p>
+          </div>
+        </div>
+
+        <!-- History Timeline Section -->
+        <div class="pt-4 border-t border-slate-200">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-wrench text-amber-500"></i> Lịch Sử Bảo Trì & Điều Chuyển
+            </h4>
+            <button onclick="openAddHistoryModalForCurrentDevice()" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1">
+              <i class="fa-solid fa-plus"></i> Ghi Nhật Ký Mới
+            </button>
+          </div>
+
+          <div id="detailHistoryTimeline" class="space-y-3">
+            <!-- Render timeline via JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+        <button onclick="openPrintModal(currentDetailDeviceId)" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-semibold rounded-lg transition flex items-center gap-2">
+          <i class="fa-solid fa-print"></i> In Tem QR
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openDeviceModal('edit', currentDetailDeviceId)" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition flex items-center gap-1.5">
+            <i class="fa-solid fa-pen-to-square"></i> Chỉnh Sửa
+          </button>
+          <button onclick="closeModal('deviceDetailModal')" class="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs sm:text-sm font-semibold rounded-lg transition">
+            Đóng
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. MODAL THÊM / SỬA THIẾT BỊ -->
+  <div id="deviceFormModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 my-6">
+      
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <h3 id="deviceFormModalTitle" class="font-bold text-base sm:text-lg flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle text-blue-400"></i> Thêm Mới Thiết Bị CNTT
+        </h3>
+        <button onclick="closeModal('deviceFormModal')" class="text-slate-400 hover:text-white text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="deviceForm" onsubmit="handleDeviceFormSubmit(event)" class="p-6 space-y-4 max-h-[78vh] overflow-y-auto">
+        <input type="hidden" id="formMode" value="add">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- ID Asset Tag -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Mã Thiết Bị / Asset Tag <span class="text-red-500">*</span></label>
+            <input type="text" id="formDeviceId" required placeholder="VD: AST-0001" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 uppercase font-mono font-semibold">
+            <span class="text-[11px] text-slate-400">Mã duy nhất dùng để in QR dán lên thiết bị</span>
+          </div>
+
+          <!-- Tên thiết bị -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Tên Thiết Bị <span class="text-red-500">*</span></label>
+            <input type="text" id="formDeviceName" required placeholder="VD: Laptop Dell Latitude 5420" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <!-- Chủng loại -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Chủng Loại <span class="text-red-500">*</span></label>
+            <select id="formCategory" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+              <option value="Laptop">Laptop</option>
+              <option value="PC">PC</option>
+              <option value="Máy in tem">Máy in tem</option>
+              <option value="Máy in văn phòng">Máy in văn phòng</option>
+              <option value="Switch">Switch</option>
+              <option value="Access Point">Access Point</option>
+              <option value="Màn hình">Màn hình</option>
+              <option value="Thiết bị IoT/Handheld">Thiết bị IoT/Handheld</option>
+              <option value="Khác">Khác...</option>
+            </select>
+          </div>
+
+          <!-- Serial Number -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Số S/N từ Nhà Sản Xuất</label>
+            <input type="text" id="formSerialNumber" placeholder="VD: 8J2K1L3..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+          </div>
+
+          <!-- IP / MAC -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Địa chỉ IP / MAC</label>
+            <input type="text" id="formIpMac" placeholder="VD: 192.168.1.105 hoặc MAC" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+          </div>
+
+          <!-- Khu vực / Phân xưởng -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Khu Vực / Phân Xưởng <span class="text-red-500">*</span></label>
+            <input type="text" id="formFactoryArea" required list="areaOptions" placeholder="VD: Xưởng A, Kho thành phẩm..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            <datalist id="areaOptions">
+              <option value="Xưởng A"></option>
+              <option value="Xưởng B"></option>
+              <option value="Kho nguyên liệu"></option>
+              <option value="Kho thành phẩm"></option>
+              <option value="Phòng QC"></option>
+              <option value="Văn phòng IT"></option>
+              <option value="Phòng Server"></option>
+              <option value="Kho IT"></option>
+            </datalist>
+          </div>
+
+          <!-- Người hoặc bộ phận sử dụng -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Người / Bộ Phận Sử Dụng <span class="text-red-500">*</span></label>
+            <input type="text" id="formAssignedTo" required placeholder="VD: Nguyễn Văn A (QC Lead)" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <!-- Trạng thái -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Trạng Thái <span class="text-red-500">*</span></label>
+            <select id="formStatus" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+              <option value="Đang sử dụng">Đang sử dụng</option>
+              <option value="Dự phòng trong kho">Dự phòng trong kho</option>
+              <option value="Đang sửa chữa">Đang sửa chữa</option>
+              <option value="Hỏng/Chờ thanh lý">Hỏng/Chờ thanh lý</option>
+            </select>
+          </div>
+
+          <!-- Ngày mua / bàn giao -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Ngày Mua / Bàn Giao</label>
+            <input type="date" id="formPurchaseDate" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <!-- Kỹ thuật viên IT tạo/sửa -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Kỹ Thuật Viên Thực Hiện</label>
+            <input type="text" id="formPerformedBy" placeholder="Tên kỹ thuật viên IT" value="IT Support" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <!-- Ghi chú cấu hình -->
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Ghi Chú Cấu Hình Kỹ Thuật / Tình Trạng</label>
+            <textarea id="formNotes" rows="2" placeholder="VD: CPU Core i5, RAM 16GB, SSD 512GB, tình trạng pin..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end gap-3">
+          <button type="button" onclick="closeModal('deviceFormModal')" class="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg text-sm font-medium">Hủy bỏ</button>
+          <button type="submit" id="submitDeviceBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow flex items-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu Dữ Liệu
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- 3. MODAL GHI NHẬT KÝ BẢO DƯỠNG & ĐIỀU CHUYỂN -->
+  <div id="historyLogModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 my-6">
+      
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <h3 class="font-bold text-base sm:text-lg flex items-center gap-2">
+          <i class="fa-solid fa-wrench text-amber-400"></i> Ghi Nhật Ký Bảo Trì / Điều Chuyển
+        </h3>
+        <button onclick="closeModal('historyLogModal')" class="text-slate-400 hover:text-white text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="historyForm" onsubmit="handleHistoryFormSubmit(event)" class="p-6 space-y-4">
+        <input type="hidden" id="histDeviceId">
+
+        <!-- Target device badge -->
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-center justify-between">
+          <div>
+            <span class="text-xs text-amber-800 block">Thiết bị:</span>
+            <span id="histDeviceSummary" class="font-bold text-sm text-slate-900">AST-0001 - Laptop Dell</span>
+          </div>
+          <span id="histCurrentStatus" class="text-xs font-semibold px-2 py-0.5 rounded bg-white text-amber-800 border border-amber-300">Đang sử dụng</span>
+        </div>
+
+        <!-- Action type -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Loại Hành Động <span class="text-red-500">*</span></label>
+          <select id="histActionType" required onchange="handleActionTypeChange()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white">
+            <option value="Bảo dưỡng">Bảo dưỡng định kỳ</option>
+            <option value="Báo hỏng / Sửa chữa">Báo hỏng / Sửa chữa linh kiện</option>
+            <option value="Bàn giao">Bàn giao sử dụng</option>
+            <option value="Thu hồi">Thu hồi về kho</option>
+          </select>
+        </div>
+
+        <!-- Auto update device status -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Cập Nhật Trạng Thái Thiết Bị Sang:</label>
+          <select id="histNewStatus" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white">
+            <option value="">(Giữ nguyên trạng thái cũ)</option>
+            <option value="Đang sử dụng">Đang sử dụng</option>
+            <option value="Dự phòng trong kho">Dự phòng trong kho</option>
+            <option value="Đang sửa chữa">Đang sửa chữa</option>
+            <option value="Hỏng/Chờ thanh lý">Hỏng/Chờ thanh lý</option>
+          </select>
+        </div>
+
+        <!-- If Transfer/Recover, change assigned to -->
+        <div id="histTransferFields" class="space-y-3 pt-2 border-t border-slate-100">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Bàn Giao / Chuyển Giao Cho (Người/Bộ phận):</label>
+            <input type="text" id="histNewAssignedTo" placeholder="Để trống nếu không thay đổi" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Điều Chuyển Đến Khu Vực / Xưởng:</label>
+            <input type="text" id="histNewFactoryArea" placeholder="Để trống nếu không thay đổi" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+          </div>
+        </div>
+
+        <!-- Performed By -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Kỹ Thuật Viên IT Thực Hiện <span class="text-red-500">*</span></label>
+          <input type="text" id="histPerformedBy" required value="Lê Tuấn IT" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Chi Tiết Công Việc / Linh Kiện Thay Thế <span class="text-red-500">*</span></label>
+          <textarea id="histDescription" rows="3" required placeholder="Ghi chú chi tiết: vệ sinh, cài lại win, thay bàn phím, kết quả nghiệm thu..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500"></textarea>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end gap-3">
+          <button type="button" onclick="closeModal('historyLogModal')" class="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg text-sm font-medium">Hủy</button>
+          <button type="submit" id="submitHistBtn" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-bold shadow flex items-center gap-2">
+            <i class="fa-solid fa-check"></i> Lưu Nhật Ký
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- 4. MODAL IN TEM NHÃN ASSET TAG QR CODE -->
+  <div id="printLabelModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+      
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between no-print">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-print text-emerald-400"></i> In Tem Nhãn Tài Sản (Asset Tag)
+        </h3>
+        <button onclick="closeModal('printLabelModal')" class="text-slate-400 hover:text-white text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        
+        <!-- Instruction -->
+        <p class="text-xs text-slate-500 text-center no-print">
+          Kích thước tiêu chuẩn phù hợp dán trực tiếp lên laptop, màn hình, máy in tem nhiệt hoặc tủ rack:
+        </p>
+
+        <!-- PRINTABLE LABEL BOX (Chuẩn tem in nhãn dán) -->
+        <div id="printable-label" class="border-2 border-dashed border-slate-800 bg-white p-4 rounded-xl shadow-sm text-slate-900 max-w-[340px] mx-auto">
+          <!-- Company Header -->
+          <div class="border-b border-slate-300 pb-2 mb-2 flex items-center justify-between">
+            <span class="font-bold text-[11px] uppercase tracking-wider text-slate-700">TÀI SẢN CNTT NHÀ MÁY</span>
+            <span class="text-[10px] font-semibold text-slate-500">IT DEPT</span>
+          </div>
+
+          <!-- Body: QR Code & Text Info -->
+          <div class="flex items-center gap-3">
+            <div id="qrcodeContainer" class="p-1 bg-white border border-slate-300 rounded flex-shrink-0"></div>
+            <div class="text-left space-y-1 min-w-0">
+              <h2 id="printLabelId" class="font-black text-lg text-slate-900 font-mono tracking-tight leading-none">AST-0001</h2>
+              <p id="printLabelName" class="text-xs font-bold text-slate-800 truncate">Dell Latitude 5420</p>
+              <p id="printLabelCategory" class="text-[11px] text-slate-600">Loại: Laptop</p>
+              <p id="printLabelSn" class="text-[10px] text-slate-500 font-mono truncate">S/N: 8J2K1L3</p>
+            </div>
+          </div>
+
+          <!-- Footer warning -->
+          <div class="mt-2 pt-1.5 border-t border-slate-200 text-center text-[9px] text-slate-500 uppercase tracking-widest">
+            TÀI SẢN CÔNG TY - KHÔNG TỰ Ý GỠ NHÃN
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="pt-4 border-t border-slate-200 flex items-center justify-between no-print">
+          <button onclick="closeModal('printLabelModal')" class="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg text-xs sm:text-sm font-medium">Đóng</button>
+          <button onclick="window.print()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs sm:text-sm font-bold shadow flex items-center gap-2">
+            <i class="fa-solid fa-print"></i> In Tem Ngay
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 5. MODAL CÀI ĐẶT KẾT NỐI API GOOGLE SHEETS -->
+  <div id="settingsModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+      
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <h3 class="font-bold text-base sm:text-lg flex items-center gap-2">
+          <i class="fa-solid fa-cloud text-blue-400"></i> Cài Đặt Kết Nối Google Sheets
+        </h3>
+        <button onclick="closeModal('settingsModal')" class="text-slate-400 hover:text-white text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Google Apps Script Web App URL:</label>
+          <input type="url" id="gasApiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+          <p class="text-[11px] text-slate-500 mt-1">
+            Dán URL Web App nhận được sau khi Deploy Google Apps Script (Quyền: "Execute as: Me", "Who has access: Anyone").
+          </p>
+        </div>
+
+        <div class="flex gap-2">
+          <button onclick="testApiConnection()" id="testApiBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plug"></i> Kiểm Tra Kết Nối
+          </button>
+          <button onclick="switchToDemoMode()" class="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold rounded-lg transition">
+            Dùng Chế Độ Demo
+          </button>
+        </div>
+
+        <div id="apiTestResult" class="hidden p-3 rounded-lg text-xs"></div>
+
+        <!-- Quick guide accordion -->
+        <div class="pt-3 border-t border-slate-200">
+          <h5 class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-question text-blue-500"></i> Các bước lấy URL Google Apps Script:
+          </h5>
+          <ol class="list-decimal list-inside text-xs text-slate-600 space-y-1 pl-1">
+            <li>Tạo Google Sheet và mở <strong>Tiện ích mở rộng -> Apps Script</strong>.</li>
+            <li>Dán toàn bộ mã file <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-600">Code.gs</code> vào.</li>
+            <li>Chạy hàm <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-600">setupInitialSheet</code> 1 lần để tạo 2 tab và dữ liệu mẫu.</li>
+            <li>Bấm <strong>Triển khai (Deploy) -> Triển khai mới (New deployment)</strong> -> Loại: <strong>Ứng dụng web (Web app)</strong>.</li>
+            <li>Chọn <em>Ai có quyền truy cập: Bất kỳ ai (Anyone)</em> -> Bấm Triển khai -> Sao chép URL và dán vào đây!</li>
+          </ol>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end gap-2">
+          <button onclick="closeModal('settingsModal')" class="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg text-sm font-medium">Đóng</button>
+          <button onclick="saveApiUrl()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow">
+            Lưu Cấu Hình
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
+  <script>
+    /**
+     * =========================================================================
+     * 1. KHỞI TẠO STATE & DỮ LIỆU MOCK (DEMO DATA CHO NHÀ MÁY)
+     * =========================================================================
+     */
+    const STORAGE_KEY_API_URL = 'IT_ASSET_GAS_URL';
+    const STORAGE_KEY_LOCAL_DATA = 'IT_ASSET_LOCAL_CACHE';
+
+    // Dữ liệu mẫu chuẩn nhà máy
+    const MOCK_DEVICES = [
+      {
+        id: 'AST-0001',
+        name: 'Laptop Dell Latitude 5420',
+        category: 'Laptop',
+        serial_number: '8J2K1L3',
+        ip_mac: '192.168.1.105',
+        factory_area: 'Văn phòng IT',
+        assigned_to: 'Lê Tuấn IT (Admin)',
+        status: 'Đang sử dụng',
+        purchase_date: '2023-05-15',
+        notes: 'Core i5-1145G7, RAM 16GB, SSD 512GB NVMe'
+      },
+      {
+        id: 'AST-0002',
+        name: 'Máy in mã vạch Zebra ZD230',
+        category: 'Máy in tem',
+        serial_number: 'ZB23098711',
+        ip_mac: '192.168.20.12',
+        factory_area: 'Kho thành phẩm',
+        assigned_to: 'Bộ phận Kho / Logistics',
+        status: 'Đang sử dụng',
+        purchase_date: '2023-08-20',
+        notes: 'Dùng in nhãn thùng carton xuất khẩu, khổ 4x6 inch'
+      },
+      {
+        id: 'AST-0003',
+        name: 'Switch Cisco Catalyst 2960X 24P',
+        category: 'Switch',
+        serial_number: 'FCW2145B09X',
+        ip_mac: '192.168.1.2',
+        factory_area: 'Phòng Server',
+        assigned_to: 'Phòng CNTT',
+        status: 'Đang sử dụng',
+        purchase_date: '2022-01-10',
+        notes: 'Switch phân phối tầng 1 & khu vực Xưởng A'
+      },
+      {
+        id: 'AST-0004',
+        name: 'Máy tính để bàn HP ProDesk 400 G7',
+        category: 'PC',
+        serial_number: 'HP400G79981',
+        ip_mac: '192.168.10.33',
+        factory_area: 'Phòng QC',
+        assigned_to: 'Nguyễn Thị Mai (QC Lead)',
+        status: 'Đang sử dụng',
+        purchase_date: '2023-02-18',
+        notes: 'Kết nối máy đo kiểm CMM quang học'
+      },
+      {
+        id: 'AST-0005',
+        name: 'Máy kiểm kho Handheld Zebra TC21',
+        category: 'Thiết bị IoT/Handheld',
+        serial_number: 'TC21VN4401',
+        ip_mac: '192.168.20.45',
+        factory_area: 'Kho nguyên liệu',
+        assigned_to: 'Nguyễn Văn Bình (Thủ kho NL)',
+        status: 'Đang sửa chữa',
+        purchase_date: '2023-11-05',
+        notes: 'Bị rơi nứt kính quét Barcode, đang đợi linh kiện'
+      },
+      {
+        id: 'AST-0006',
+        name: 'Access Point Cisco Meraki MR46',
+        category: 'Access Point',
+        serial_number: 'Q2KD-9988-ABCD',
+        ip_mac: '192.168.1.50',
+        factory_area: 'Xưởng A',
+        assigned_to: 'Hạ tầng mạng xưởng sản xuất',
+        status: 'Đang sử dụng',
+        purchase_date: '2023-06-12',
+        notes: 'Phát wifi cho xe tự hành AGV và máy quét mã vạch'
+      },
+      {
+        id: 'AST-0007',
+        name: 'Laptop ThinkPad E14 Gen 4',
+        category: 'Laptop',
+        serial_number: 'PF399182',
+        ip_mac: '',
+        factory_area: 'Kho IT',
+        assigned_to: 'Bộ phận IT',
+        status: 'Dự phòng trong kho',
+        purchase_date: '2024-01-15',
+        notes: 'Máy dự phòng cho quản đốc mới hoặc thay thế gấp'
+      },
+      {
+        id: 'AST-0008',
+        name: 'Máy in đa năng HP LaserJet M428fdw',
+        category: 'Máy in văn phòng',
+        serial_number: 'VNB3K88712',
+        ip_mac: '192.168.10.200',
+        factory_area: 'Văn phòng Giám đốc xưởng',
+        assigned_to: 'Khối Quản lý sản xuất',
+        status: 'Đang sử dụng',
+        purchase_date: '2022-09-01',
+        notes: 'In, Scan 2 mặt, Copy lệnh sản xuất hàng ngày'
+      },
+      {
+        id: 'AST-0009',
+        name: 'Màn hình Dell UltraSharp U2422H',
+        category: 'Màn hình',
+        serial_number: 'CN-0R66T1',
+        ip_mac: '',
+        factory_area: 'Kho IT',
+        assigned_to: 'Bộ phận IT',
+        status: 'Hỏng/Chờ thanh lý',
+        purchase_date: '2020-04-10',
+        notes: 'Cháy panel màn hình, chi phí thay cao hơn mua mới'
+      }
+    ];
+
+    const MOCK_HISTORY = [
+      {
+        log_id: 'LOG-0001',
+        device_id: 'AST-0001',
+        action_type: 'Bàn giao',
+        date: '2023-05-15 08:30:00',
+        performed_by: 'Admin IT',
+        description: 'Bàn giao máy tính mới cho IT Support Lê Tuấn sử dụng làm việc.'
+      },
+      {
+        log_id: 'LOG-0002',
+        device_id: 'AST-0002',
+        action_type: 'Bảo dưỡng',
+        date: '2024-01-10 14:00:00',
+        performed_by: 'Lê Tuấn IT',
+        description: 'Vệ sinh đầu in nhiệt bằng cồn Isopropyl, chỉnh lại trục cuộn nhãn.'
+      },
+      {
+        log_id: 'LOG-0003',
+        device_id: 'AST-0005',
+        action_type: 'Báo hỏng / Sửa chữa',
+        date: '2024-03-02 10:15:00',
+        performed_by: 'Lê Tuấn IT',
+        description: 'Tiếp nhận từ Kho nguyên liệu: Rơi vỡ mặt kính quét camera. Gửi hãng báo giá thay cụm kính.'
+      },
+      {
+        log_id: 'LOG-0004',
+        device_id: 'AST-0004',
+        action_type: 'Bảo dưỡng',
+        date: '2024-03-12 16:45:00',
+        performed_by: 'Lê Tuấn IT',
+        description: 'Vệ sinh bụi quạt tản nhiệt, cập nhật bản vá Windows và driver máy CMM.'
+      },
+      {
+        log_id: 'LOG-0005',
+        device_id: 'AST-0009',
+        action_type: 'Báo hỏng / Sửa chữa',
+        date: '2024-02-20 09:00:00',
+        performed_by: 'Lê Tuấn IT',
+        description: 'Màn hình chớp tắt rồi mất nguồn hoàn toàn. Đã lập biên bản chờ thanh lý tài sản.'
+      }
+    ];
+
+    // Global State
+    let appState = {
+      devices: [],
+      history: [],
+      apiUrl: localStorage.getItem(STORAGE_KEY_API_URL) || '',
+      isLive: false,
+      currentPage: 1,
+      pageSize: 8,
+      filteredDevices: [],
+      chartAreaInstance: null,
+      chartCategoryInstance: null
+    };
+
+    let currentDetailDeviceId = null;
+    let html5QrScannerInstance = null;
+    let isCameraRunning = false;
+
+    /**
+     * =========================================================================
+     * 2. KHỞI TẠO ỨNG DỤNG
+     * =========================================================================
+     */
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('gasApiUrlInput').value = appState.apiUrl;
+      
+      // Khởi tạo âm thanh beep qua Web Audio API
+      initAudioBeep();
+
+      // Đọc dữ liệu ban đầu
+      if (appState.apiUrl && appState.apiUrl.trim().startsWith('http')) {
+        fetchData();
+      } else {
+        // Tải mock data nếu chưa có URL
+        loadMockData();
+      }
+
+      // Khởi tạo camera list
+      initCameraList();
+    });
+
+    function loadMockData() {
+      appState.devices = [...MOCK_DEVICES];
+      appState.history = [...MOCK_HISTORY];
+      appState.isLive = false;
+      updateConnectionBadge(false);
+      renderAll();
+      showToast('Đang chạy ở Chế độ Demo với dữ liệu mẫu nhà máy', 'info');
+    }
+
+    /**
+     * =========================================================================
+     * 3. GỌI API GOOGLE APPS SCRIPT (CORS COMPLIANT FETCH)
+     * =========================================================================
+     */
+    async function fetchData(isManualSync = false) {
+      if (!appState.apiUrl) {
+        loadMockData();
+        return;
+      }
+
+      const syncBtn = document.getElementById('syncBtn');
+      if (syncBtn) syncBtn.classList.add('animate-spin');
+
+      try {
+        const url = new URL(appState.apiUrl);
+        url.searchParams.set('action', 'getAllData');
+        url.searchParams.set('t', Date.now()); // Tránh cache
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        const resData = await response.json();
+
+        if (resData && resData.status === 'success') {
+          appState.devices = resData.devices || [];
+          appState.history = resData.history || [];
+          appState.isLive = true;
+          updateConnectionBadge(true);
+          renderAll();
+          if (isManualSync) showToast('Đồng bộ dữ liệu từ Google Sheets thành công!', 'success');
+        } else {
+          throw new Error(resData.message || 'Lỗi trả về từ Apps Script');
+        }
+      } catch (err) {
+        console.warn('Lỗi kết nối Google Sheets, chuyển sang chế độ dự phòng:', err);
+        updateConnectionBadge(false, 'Mất kết nối Sheet');
+        if (appState.devices.length === 0) {
+          loadMockData();
+        }
+        if (isManualSync) showToast('Không thể kết nối Google Sheets: ' + err.message, 'error');
+      } finally {
+        if (syncBtn) syncBtn.classList.remove('animate-spin');
+      }
+    }
+
+    /**
+     * Gửi request POST tới Google Apps Script
+     * Lưu ý quan trọng: Apps Script Web App khi nhận POST sẽ redirect 302.
+     * Để tránh lỗi CORS preflight (OPTIONS), gửi body dưới dạng text/plain;charset=utf-8
+     */
+    async function sendGasPost(action, data) {
+      if (!appState.apiUrl || !appState.isLive) {
+        // Mô phỏng cập nhật nội bộ khi ở Demo Mode
+        return handleLocalMockAction(action, data);
+      }
+
+      try {
+        const payload = { action: action, data: data };
+        const response = await fetch(appState.apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const res = await response.json();
+        return res;
+      } catch (err) {
+        console.error('Lỗi khi gửi dữ liệu lên Google Sheets:', err);
+        // Fallback thực hiện cục bộ để người dùng không bị gián đoạn trải nghiệm
+        handleLocalMockAction(action, data);
+        return { status: 'success', message: 'Đã lưu cục bộ (Chưa đồng bộ lên Sheet do mạng: ' + err.message + ')' };
+      }
+    }
+
+    function handleLocalMockAction(action, data) {
+      if (action === 'addDevice') {
+        appState.devices.unshift(data);
+        appState.history.unshift({
+          log_id: 'LOG-' + Date.now().toString().slice(-6),
+          device_id: data.id,
+          action_type: 'Bàn giao',
+          date: new Date().toISOString().replace('T', ' ').slice(0, 19),
+          performed_by: data.performed_by || 'IT Support',
+          description: 'Thêm mới thiết bị vào hệ thống: ' + (data.name || data.id)
+        });
+        return { status: 'success', message: 'Thêm mới thành công (Demo)' };
+      } else if (action === 'updateDevice') {
+        const idx = appState.devices.findIndex(d => d.id === data.id);
+        if (idx !== -1) {
+          appState.devices[idx] = { ...appState.devices[idx], ...data };
+        }
+        return { status: 'success', message: 'Cập nhật thành công (Demo)' };
+      } else if (action === 'deleteDevice') {
+        appState.devices = appState.devices.filter(d => d.id !== data.id);
+        return { status: 'success', message: 'Đã xóa thiết bị (Demo)' };
+      } else if (action === 'addHistoryLog') {
+        const log = {
+          log_id: 'LOG-' + Date.now().toString().slice(-6),
+          device_id: data.device_id,
+          action_type: data.action_type,
+          date: new Date().toISOString().replace('T', ' ').slice(0, 19),
+          performed_by: data.performed_by,
+          description: data.description
+        };
+        appState.history.unshift(log);
+
+        // Cập nhật trạng thái tab Devices nếu có
+        const dev = appState.devices.find(d => d.id === data.device_id);
+        if (dev) {
+          if (data.new_status) dev.status = data.new_status;
+          if (data.new_assigned_to) dev.assigned_to = data.new_assigned_to;
+          if (data.new_factory_area) dev.factory_area = data.new_factory_area;
+        }
+        return { status: 'success', message: 'Đã ghi nhận nhật ký (Demo)' };
+      }
+      return { status: 'error', message: 'Hành động không xác định' };
+    }
+
+    function updateConnectionBadge(isLive, customText) {
+      const badge = document.getElementById('connectionStatusBadge');
+      const text = document.getElementById('connectionStatusText');
+      if (!badge || !text) return;
+
+      if (isLive) {
+        badge.className = 'flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-pointer';
+        text.innerText = 'Google Sheets (Live)';
+        badge.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-emerald-400';
+      } else {
+        badge.className = 'flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 cursor-pointer';
+        text.innerText = customText || 'Chế độ Demo';
+        badge.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 4. RENDER TOÀN BỘ GIAO DIỆN
+     * =========================================================================
+     */
+    function renderAll() {
+      renderDashboardStats();
+      renderCharts();
+      renderRecentActivities();
+      applyFilters();
+      renderHistoryTable();
+    }
+
+    /**
+     * Render Dashboard KPI Cards
+     */
+    function renderDashboardStats() {
+      const total = appState.devices.length;
+      const active = appState.devices.filter(d => d.status === 'Đang sử dụng').length;
+      const spare = appState.devices.filter(d => d.status === 'Dự phòng trong kho').length;
+      const maintenance = appState.devices.filter(d => d.status === 'Đang sửa chữa').length;
+      const scrap = appState.devices.filter(d => d.status === 'Hỏng/Chờ thanh lý').length;
+
+      document.getElementById('statTotalDevices').innerText = total;
+      document.getElementById('statActiveDevices').innerText = active;
+      document.getElementById('statSpareDevices').innerText = spare;
+      document.getElementById('statMaintenanceDevices').innerText = maintenance + scrap;
+
+      const activePct = total > 0 ? Math.round((active / total) * 100) : 0;
+      document.getElementById('statActivePercent').innerHTML = `<i class="fa-solid fa-circle-check"></i> ${activePct}% đang vận hành`;
+      document.getElementById('statScrapCount').innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${maintenance} sửa chữa, ${scrap} thanh lý`;
+
+      const badgeCount = document.getElementById('tabCountBadge');
+      if (badgeCount) badgeCount.innerText = total;
+    }
+
+    /**
+     * Render Biểu Đồ Thống Kê (Chart.js)
+     */
+    function renderCharts() {
+      // 1. Biểu đồ Khu vực
+      const areaCounts = {};
+      appState.devices.forEach(d => {
+        const a = d.factory_area || 'Chưa phân bổ';
+        areaCounts[a] = (areaCounts[a] || 0) + 1;
+      });
+
+      const areaLabels = Object.keys(areaCounts);
+      const areaData = Object.values(areaCounts);
+
+      const ctxArea = document.getElementById('chartArea');
+      if (ctxArea) {
+        if (appState.chartAreaInstance) appState.chartAreaInstance.destroy();
+        appState.chartAreaInstance = new Chart(ctxArea, {
+          type: 'doughnut',
+          data: {
+            labels: areaLabels,
+            datasets: [{
+              data: areaData,
+              backgroundColor: [
+                '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'
+              ],
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'right', labels: { font: { size: 11, family: 'Inter' } } }
+            },
+            cutout: '65%'
+          }
+        });
+      }
+
+      // 2. Biểu đồ Chủng loại thiết bị
+      const catCounts = {};
+      appState.devices.forEach(d => {
+        const c = d.category || 'Khác';
+        catCounts[c] = (catCounts[c] || 0) + 1;
+      });
+
+      const catLabels = Object.keys(catCounts);
+      const catData = Object.values(catCounts);
+
+      const ctxCat = document.getElementById('chartCategory');
+      if (ctxCat) {
+        if (appState.chartCategoryInstance) appState.chartCategoryInstance.destroy();
+        appState.chartCategoryInstance = new Chart(ctxCat, {
+          type: 'bar',
+          data: {
+            labels: catLabels,
+            datasets: [{
+              label: 'Số lượng máy',
+              data: catData,
+              backgroundColor: '#0ea5e9',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { precision: 0, font: { size: 10 } }
+              },
+              x: {
+                ticks: { font: { size: 10 } }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    /**
+     * Render Hoạt động bảo trì gần đây
+     */
+    function renderRecentActivities() {
+      const container = document.getElementById('recentActivityList');
+      if (!container) return;
+
+      const top5 = appState.history.slice(0, 5);
+      if (top5.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">Chưa có nhật ký hoạt động nào.</div>`;
+        return;
+      }
+
+      container.innerHTML = top5.map(item => {
+        let iconClass = 'fa-solid fa-wrench text-amber-500 bg-amber-50';
+        if (item.action_type === 'Bàn giao') iconClass = 'fa-solid fa-handshake text-blue-500 bg-blue-50';
+        else if (item.action_type === 'Thu hồi') iconClass = 'fa-solid fa-arrow-rotate-left text-slate-600 bg-slate-100';
+        else if (item.action_type === 'Báo hỏng / Sửa chữa') iconClass = 'fa-solid fa-triangle-exclamation text-red-500 bg-red-50';
+
+        return `
+          <div class="flex items-start justify-between p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition cursor-pointer" onclick="openDeviceDetailModal('${item.device_id}')">
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0 ${iconClass}">
+                <i class="${iconClass.split(' ')[0]} ${iconClass.split(' ')[1]}"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-mono font-bold text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-800">${item.device_id}</span>
+                  <span class="font-semibold text-xs text-slate-800">${item.action_type}</span>
+                </div>
+                <p class="text-xs text-slate-600 line-clamp-1 mt-0.5">${escapeHtml(item.description)}</p>
+                <span class="text-[11px] text-slate-400">KT: ${escapeHtml(item.performed_by)}</span>
+              </div>
+            </div>
+            <span class="text-[11px] text-slate-400 whitespace-nowrap pl-2">${item.date ? item.date.slice(0, 16) : ''}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /**
+     * =========================================================================
+     * 5. QUẢN LÝ BẢNG THIẾT BỊ (SEARCH, FILTER & PAGINATION)
+     * =========================================================================
+     */
+    function applyFilters() {
+      const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+      const cat = document.getElementById('filterCategory').value;
+      const area = document.getElementById('filterArea').value;
+      const status = document.getElementById('filterStatus').value;
+
+      appState.filteredDevices = appState.devices.filter(d => {
+        const matchQ = !q || (
+          (d.id && d.id.toLowerCase().includes(q)) ||
+          (d.name && d.name.toLowerCase().includes(q)) ||
+          (d.serial_number && d.serial_number.toLowerCase().includes(q)) ||
+          (d.ip_mac && d.ip_mac.toLowerCase().includes(q)) ||
+          (d.assigned_to && d.assigned_to.toLowerCase().includes(q)) ||
+          (d.factory_area && d.factory_area.toLowerCase().includes(q))
+        );
+        const matchCat = !cat || d.category === cat;
+        const matchArea = !area || d.factory_area === area;
+        const matchStatus = !status || d.status === status;
+
+        return matchQ && matchCat && matchArea && matchStatus;
+      });
+
+      appState.currentPage = 1;
+      renderDevicesTable();
+    }
+
+    function handleSearch() {
+      const val = document.getElementById('searchInput').value;
+      document.getElementById('clearSearchBtn').classList.toggle('hidden', !val);
+      applyFilters();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      applyFilters();
+    }
+
+    function renderDevicesTable() {
+      const tbody = document.getElementById('devicesTableBody');
+      const items = appState.filteredDevices;
+      const total = items.length;
+
+      if (total === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="text-center py-12 text-slate-400 text-sm">
+              <i class="fa-solid fa-box-open text-3xl mb-2 block"></i>
+              Không tìm thấy thiết bị nào phù hợp với điều kiện tìm kiếm.
+            </td>
+          </tr>
+        `;
+        document.getElementById('pageRangeText').innerText = '0 - 0';
+        document.getElementById('pageTotalText').innerText = '0';
+        document.getElementById('paginationControls').innerHTML = '';
+        return;
+      }
+
+      const totalPages = Math.ceil(total / appState.pageSize);
+      if (appState.currentPage > totalPages) appState.currentPage = totalPages;
+
+      const startIdx = (appState.currentPage - 1) * appState.pageSize;
+      const endIdx = Math.min(startIdx + appState.pageSize, total);
+      const pageItems = items.slice(startIdx, endIdx);
+
+      tbody.innerHTML = pageItems.map((item, idx) => {
+        const rowNum = startIdx + idx + 1;
+        const statusBadge = getStatusBadgeHtml(item.status);
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition group">
+            <td class="py-3 px-4 text-center text-slate-400 font-mono text-xs">${rowNum}</td>
+            <td class="py-3 px-4 font-mono font-bold text-blue-600 whitespace-nowrap">
+              <button onclick="openDeviceDetailModal('${item.id}')" class="hover:underline flex items-center gap-1.5">
+                <i class="fa-solid fa-tag text-[11px] text-slate-400"></i> ${escapeHtml(item.id)}
+              </button>
+            </td>
+            <td class="py-3 px-4 font-semibold text-slate-800">
+              <div class="line-clamp-1">${escapeHtml(item.name)}</div>
+              <div class="text-[11px] text-slate-400 font-mono font-normal">S/N: ${escapeHtml(item.serial_number || 'N/A')}</div>
+            </td>
+            <td class="py-3 px-4 hidden md:table-cell text-slate-600">${escapeHtml(item.category)}</td>
+            <td class="py-3 px-4 hidden sm:table-cell text-slate-600">
+              <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs">
+                <i class="fa-solid fa-location-dot text-[10px] text-slate-400"></i> ${escapeHtml(item.factory_area)}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-slate-700 font-medium">${escapeHtml(item.assigned_to)}</td>
+            <td class="py-3 px-4 hidden lg:table-cell text-slate-500 font-mono text-xs">${escapeHtml(item.ip_mac || '-')}</td>
+            <td class="py-3 px-4">${statusBadge}</td>
+            <td class="py-3 px-4 text-center whitespace-nowrap">
+              <div class="flex items-center justify-center space-x-1">
+                <button onclick="openDeviceDetailModal('${item.id}')" class="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded" title="Xem chi tiết & lịch sử">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button onclick="openAddHistoryModal('${item.id}')" class="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded" title="Ghi nhật ký bảo trì / Điều chuyển">
+                  <i class="fa-solid fa-wrench"></i>
+                </button>
+                <button onclick="openPrintModal('${item.id}')" class="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded" title="In tem nhãn QR">
+                  <i class="fa-solid fa-print"></i>
+                </button>
+                <button onclick="openDeviceModal('edit', '${item.id}')" class="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Chỉnh sửa thông tin">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button onclick="confirmDeleteDevice('${item.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="Xóa thiết bị">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Update footer
+      document.getElementById('pageRangeText').innerText = `${startIdx + 1} - ${endIdx}`;
+      document.getElementById('pageTotalText').innerText = total;
+
+      // Render pagination buttons
+      renderPaginationControls(totalPages);
+    }
+
+    function renderPaginationControls(totalPages) {
+      const container = document.getElementById('paginationControls');
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      html += `<button onclick="changePage(${appState.currentPage - 1})" ${appState.currentPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed"' : ''} class="px-2 py-1 text-slate-600 hover:bg-slate-200 rounded text-xs"><i class="fa-solid fa-chevron-left"></i></button>`;
+
+      for (let p = 1; p <= totalPages; p++) {
+        if (p === 1 || p === totalPages || (p >= appState.currentPage - 1 && p <= appState.currentPage + 1)) {
+          const isActive = p === appState.currentPage;
+          html += `<button onclick="changePage(${p})" class="px-2.5 py-1 text-xs font-semibold rounded ${isActive ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-200'}">${p}</button>`;
+        } else if (p === appState.currentPage - 2 || p === appState.currentPage + 2) {
+          html += `<span class="px-1 text-slate-400 text-xs">...</span>`;
+        }
+      }
+
+      html += `<button onclick="changePage(${appState.currentPage + 1})" ${appState.currentPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed"' : ''} class="px-2 py-1 text-slate-600 hover:bg-slate-200 rounded text-xs"><i class="fa-solid fa-chevron-right"></i></button>`;
+      container.innerHTML = html;
+    }
+
+    function changePage(page) {
+      appState.currentPage = page;
+      renderDevicesTable();
+    }
+
+    function getStatusBadgeHtml(status) {
+      switch (status) {
+        case 'Đang sử dụng':
+          return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Đang sử dụng</span>`;
+        case 'Dự phòng trong kho':
+          return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Dự phòng kho</span>`;
+        case 'Đang sửa chữa':
+          return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Đang sửa chữa</span>`;
+        case 'Hỏng/Chờ thanh lý':
+          return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Chờ thanh lý</span>`;
+        default:
+          return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">${escapeHtml(status || 'Khác')}</span>`;
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 6. TAB: QUÉT MÃ QR (HTML5-QRCODE INTEGRATION)
+     * =========================================================================
+     */
+    async function initCameraList() {
+      const select = document.getElementById('cameraSelect');
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length) {
+          select.innerHTML = devices.map((cam, i) => `
+            <option value="${cam.id}">${cam.label || `Camera ${i + 1}`}</option>
+          `).join('');
+        } else {
+          select.innerHTML = `<option value="">Không phát hiện camera</option>`;
+        }
+      } catch (err) {
+        select.innerHTML = `<option value="">Cần cấp quyền Camera</option>`;
+      }
+    }
+
+    async function toggleCamera() {
+      const toggleBtnText = document.getElementById('toggleCameraText');
+      const laser = document.getElementById('scannerLaser');
+      const badge = document.getElementById('scanStatusBadge');
+
+      if (isCameraRunning) {
+        await stopCameraScanner();
+        toggleBtnText.innerText = 'Bật Camera';
+        laser.classList.add('hidden');
+        badge.innerText = 'Đã tắt';
+        badge.className = 'text-xs bg-slate-800 text-slate-400 px-2.5 py-1 rounded-full border border-slate-700';
+      } else {
+        await startCameraScanner();
+      }
+    }
+
+    async function startCameraScanner() {
+      const cameraSelect = document.getElementById('cameraSelect');
+      const cameraId = cameraSelect.value;
+      const laser = document.getElementById('scannerLaser');
+      const badge = document.getElementById('scanStatusBadge');
+      const toggleBtnText = document.getElementById('toggleCameraText');
+
+      try {
+        if (!html5QrScannerInstance) {
+          html5QrScannerInstance = new Html5Qrcode('qr-reader');
+        }
+
+        const config = {
+          fps: 15,
+          qrbox: { width: 220, height: 220 },
+          aspectRatio: 1.0
+        };
+
+        const camConfig = cameraId ? cameraId : { facingMode: "environment" };
+
+        await html5QrScannerInstance.start(
+          camConfig,
+          config,
+          onQrCodeSuccess,
+          (errorMessage) => { /* ignore per-frame parse error */ }
+        );
+
+        isCameraRunning = true;
+        toggleBtnText.innerText = 'Tắt Camera';
+        laser.classList.remove('hidden');
+        badge.innerText = 'Đang quét...';
+        badge.className = 'text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-500/30';
+      } catch (err) {
+        console.error('Không thể khởi động Camera:', err);
+        showToast('Không thể truy cập camera. Vui lòng cấp quyền hoặc kiểm tra kết nối HTTPS.', 'error');
+      }
+    }
+
+    async function stopCameraScanner() {
+      if (html5QrScannerInstance && isCameraRunning) {
+        try {
+          await html5QrScannerInstance.stop();
+        } catch (e) {
+          console.warn(e);
+        }
+        isCameraRunning = false;
+      }
+    }
+
+    // Khi quét thành công mã QR
+    function onQrCodeSuccess(decodedText) {
+      playBeep();
+      if (navigator.vibrate) navigator.vibrate([80, 50, 80]); // Rung nhẹ thiết bị
+
+      showToast(`Đã quét mã: ${decodedText}`, 'success');
+
+      // Tự động tìm kiếm thiết bị tương ứng
+      const tag = decodedText.trim();
+      const dev = appState.devices.find(d => d.id.toLowerCase() === tag.toLowerCase());
+
+      if (dev) {
+        openDeviceDetailModal(dev.id);
+      } else {
+        // Thông báo mã không tồn tại và đề xuất thêm mới
+        if (confirm(`Không tìm thấy thiết bị mã "${tag}" trên hệ thống. Bạn có muốn thêm mới thiết bị với mã này không?`)) {
+          openDeviceModal('add');
+          document.getElementById('formDeviceId').value = tag;
+        }
+      }
+    }
+
+    function handleManualAssetSearch() {
+      const code = (document.getElementById('manualAssetTagInput').value || '').trim();
+      if (!code) {
+        showToast('Vui lòng nhập mã Asset Tag!', 'warning');
+        return;
+      }
+      quickSearchCode(code);
+    }
+
+    function quickSearchCode(code) {
+      const dev = appState.devices.find(d => d.id.toLowerCase() === code.toLowerCase());
+      if (dev) {
+        openDeviceDetailModal(dev.id);
+      } else {
+        showToast(`Không tìm thấy thiết bị có mã "${code}"`, 'warning');
+      }
+    }
+
+    /**
+     * Web Audio API: Giả lập tiếng beep báo quét thành công
+     */
+    let audioCtx = null;
+    function initAudioBeep() {
+      window.addEventListener('click', () => {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }, { once: true });
+    }
+
+    function playBeep() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880 Hz
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      } catch (e) {
+        console.warn('Audio context error:', e);
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 7. MODAL: CHI TIẾT THIẾT BỊ & LỊCH SỬ BẢO DƯỠNG
+     * =========================================================================
+     */
+    function openDeviceDetailModal(deviceId) {
+      const dev = appState.devices.find(d => d.id === deviceId);
+      if (!dev) return;
+
+      currentDetailDeviceId = deviceId;
+
+      document.getElementById('detailDeviceName').innerText = dev.name;
+      document.getElementById('detailDeviceTag').innerText = dev.id;
+      document.getElementById('detailCategory').innerText = dev.category || 'N/A';
+      document.getElementById('detailSerial').innerText = dev.serial_number || 'Chưa rõ';
+      document.getElementById('detailIpMac').innerText = dev.ip_mac || 'Chưa thiết lập';
+      document.getElementById('detailArea').innerText = dev.factory_area || 'Chưa xác định';
+      document.getElementById('detailAssigned').innerText = dev.assigned_to || 'Chưa bàn giao';
+      document.getElementById('detailPurchaseDate').innerText = dev.purchase_date || 'N/A';
+      document.getElementById('detailNotes').innerText = dev.notes || 'Không có ghi chú thêm.';
+
+      // Status badge
+      const badge = document.getElementById('detailStatusBadge');
+      badge.className = 'inline-block mt-1 px-3 py-1 text-xs font-bold rounded-full';
+      if (dev.status === 'Đang sử dụng') {
+        badge.classList.add('bg-emerald-100', 'text-emerald-800');
+        badge.innerText = 'Đang sử dụng';
+      } else if (dev.status === 'Dự phòng trong kho') {
+        badge.classList.add('bg-blue-100', 'text-blue-800');
+        badge.innerText = 'Dự phòng trong kho';
+      } else if (dev.status === 'Đang sửa chữa') {
+        badge.classList.add('bg-amber-100', 'text-amber-800');
+        badge.innerText = 'Đang sửa chữa';
+      } else {
+        badge.classList.add('bg-rose-100', 'text-rose-800');
+        badge.innerText = dev.status || 'Hỏng/Chờ thanh lý';
+      }
+
+      // Render timeline history for this device
+      const logs = appState.history.filter(h => h.device_id === deviceId);
+      const timeline = document.getElementById('detailHistoryTimeline');
+
+      if (logs.length === 0) {
+        timeline.innerHTML = `<div class="text-slate-400 text-xs italic py-2">Chưa có bản ghi bảo trì nào cho thiết bị này.</div>`;
+      } else {
+        timeline.innerHTML = logs.map(l => `
+          <div class="relative pl-6 pb-4 border-l-2 border-slate-200 last:border-l-0 last:pb-0">
+            <span class="absolute -left-[7px] top-0 w-3 h-3 rounded-full bg-blue-600 ring-4 ring-white"></span>
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-xs text-slate-800">${escapeHtml(l.action_type)}</span>
+              <span class="text-[11px] text-slate-400">${escapeHtml(l.date || '')}</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-1">${escapeHtml(l.description)}</p>
+            <span class="text-[11px] text-slate-400 font-medium mt-0.5 block">Kỹ thuật viên: ${escapeHtml(l.performed_by || 'IT')}</span>
+          </div>
+        `).join('');
+      }
+
+      openModal('deviceDetailModal');
+    }
+
+    function openAddHistoryModalForCurrentDevice() {
+      closeModal('deviceDetailModal');
+      openAddHistoryModal(currentDetailDeviceId);
+    }
+
+    /**
+     * =========================================================================
+     * 8. MODAL: THÊM / CHỈNH SỬA THIẾT BỊ
+     * =========================================================================
+     */
+    function openDeviceModal(mode = 'add', deviceId = null) {
+      document.getElementById('formMode').value = mode;
+      const title = document.getElementById('deviceFormModalTitle');
+      const idInput = document.getElementById('formDeviceId');
+
+      if (mode === 'add') {
+        title.innerHTML = `<i class="fa-solid fa-plus-circle text-blue-400"></i> Thêm Mới Thiết Bị CNTT`;
+        document.getElementById('deviceForm').reset();
+        
+        // Tự gợi ý mã AST tiếp theo
+        idInput.value = generateNextDeviceIdLocal();
+        idInput.readOnly = false;
+        document.getElementById('formPurchaseDate').value = new Date().toISOString().split('T')[0];
+      } else {
+        title.innerHTML = `<i class="fa-solid fa-pen-to-square text-blue-400"></i> Chỉnh Sửa Thông Tin Thiết Bị`;
+        const dev = appState.devices.find(d => d.id === deviceId);
+        if (!dev) return;
+
+        idInput.value = dev.id;
+        idInput.readOnly = true; // Không sửa ID khóa chính
+        document.getElementById('formDeviceName').value = dev.name || '';
+        document.getElementById('formCategory').value = dev.category || 'Laptop';
+        document.getElementById('formSerialNumber').value = dev.serial_number || '';
+        document.getElementById('formIpMac').value = dev.ip_mac || '';
+        document.getElementById('formFactoryArea').value = dev.factory_area || '';
+        document.getElementById('formAssignedTo').value = dev.assigned_to || '';
+        document.getElementById('formStatus').value = dev.status || 'Đang sử dụng';
+        document.getElementById('formPurchaseDate').value = dev.purchase_date || '';
+        document.getElementById('formNotes').value = dev.notes || '';
+      }
+
+      openModal('deviceFormModal');
+    }
+
+    function generateNextDeviceIdLocal() {
+      let max = 0;
+      appState.devices.forEach(d => {
+        const m = String(d.id).match(/AST-(\d+)/i);
+        if (m) {
+          const val = parseInt(m[1], 10);
+          if (val > max) max = val;
+        }
+      });
+      return 'AST-' + String(max + 1).padStart(4, '0');
+    }
+
+    async function handleDeviceFormSubmit(event) {
+      event.preventDefault();
+      const submitBtn = document.getElementById('submitDeviceBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Đang lưu...`;
+
+      const mode = document.getElementById('formMode').value;
+      const deviceData = {
+        id: document.getElementById('formDeviceId').value.trim().toUpperCase(),
+        name: document.getElementById('formDeviceName').value.trim(),
+        category: document.getElementById('formCategory').value,
+        serial_number: document.getElementById('formSerialNumber').value.trim(),
+        ip_mac: document.getElementById('formIpMac').value.trim(),
+        factory_area: document.getElementById('formFactoryArea').value.trim(),
+        assigned_to: document.getElementById('formAssignedTo').value.trim(),
+        status: document.getElementById('formStatus').value,
+        purchase_date: document.getElementById('formPurchaseDate').value,
+        notes: document.getElementById('formNotes').value.trim(),
+        performed_by: document.getElementById('formPerformedBy').value.trim() || 'IT Admin'
+      };
+
+      const action = mode === 'add' ? 'addDevice' : 'updateDevice';
+      const res = await sendGasPost(action, deviceData);
+
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Lưu Dữ Liệu`;
+
+      if (res && res.status === 'success') {
+        showToast(res.message || 'Lưu thông tin thành công!', 'success');
+        closeModal('deviceFormModal');
+        // Đồng bộ lại dữ liệu
+        if (appState.isLive) {
+          fetchData();
+        } else {
+          renderAll();
+        }
+      } else {
+        showToast(res ? res.message : 'Có lỗi xảy ra', 'error');
+      }
+    }
+
+    async function confirmDeleteDevice(deviceId) {
+      if (!confirm(`Bạn có chắc chắn muốn xóa thiết bị mã "${deviceId}" khỏi hệ thống?`)) return;
+
+      const res = await sendGasPost('deleteDevice', { id: deviceId });
+      if (res && res.status === 'success') {
+        showToast(`Đã xóa thiết bị ${deviceId}`, 'success');
+        if (appState.isLive) fetchData();
+        else renderAll();
+      } else {
+        showToast(res ? res.message : 'Lỗi xóa thiết bị', 'error');
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 9. MODAL: GHI NHẬT KÝ BẢO TRÌ & ĐIỀU CHUYỂN
+     * =========================================================================
+     */
+    function openAddHistoryModal(deviceId) {
+      const dev = appState.devices.find(d => d.id === deviceId);
+      if (!dev) return;
+
+      document.getElementById('historyForm').reset();
+      document.getElementById('histDeviceId').value = dev.id;
+      document.getElementById('histDeviceSummary').innerText = `${dev.id} - ${dev.name}`;
+      document.getElementById('histCurrentStatus').innerText = dev.status;
+
+      // Mặc định đề xuất giữ nguyên
+      document.getElementById('histNewStatus').value = '';
+      document.getElementById('histNewAssignedTo').value = dev.assigned_to;
+      document.getElementById('histNewFactoryArea').value = dev.factory_area;
+
+      handleActionTypeChange();
+      openModal('historyLogModal');
+    }
+
+    function handleActionTypeChange() {
+      const action = document.getElementById('histActionType').value;
+      const statusSelect = document.getElementById('histNewStatus');
+
+      if (action === 'Bảo dưỡng') {
+        statusSelect.value = 'Đang sử dụng';
+      } else if (action === 'Báo hỏng / Sửa chữa') {
+        statusSelect.value = 'Đang sửa chữa';
+      } else if (action === 'Thu hồi') {
+        statusSelect.value = 'Dự phòng trong kho';
+        document.getElementById('histNewAssignedTo').value = 'Kho IT';
+        document.getElementById('histNewFactoryArea').value = 'Kho IT';
+      } else if (action === 'Bàn giao') {
+        statusSelect.value = 'Đang sử dụng';
+      }
+    }
+
+    async function handleHistoryFormSubmit(event) {
+      event.preventDefault();
+      const submitBtn = document.getElementById('submitHistBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Đang lưu...`;
+
+      const logData = {
+        device_id: document.getElementById('histDeviceId').value,
+        action_type: document.getElementById('histActionType').value,
+        new_status: document.getElementById('histNewStatus').value || undefined,
+        new_assigned_to: document.getElementById('histNewAssignedTo').value || undefined,
+        new_factory_area: document.getElementById('histNewFactoryArea').value || undefined,
+        performed_by: document.getElementById('histPerformedBy').value.trim(),
+        description: document.getElementById('histDescription').value.trim()
+      };
+
+      const res = await sendGasPost('addHistoryLog', logData);
+
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<i class="fa-solid fa-check"></i> Lưu Nhật Ký`;
+
+      if (res && res.status === 'success') {
+        showToast('Đã lưu nhật ký bảo trì và cập nhật thiết bị!', 'success');
+        closeModal('historyLogModal');
+        if (appState.isLive) fetchData();
+        else renderAll();
+      } else {
+        showToast(res ? res.message : 'Có lỗi khi lưu nhật ký', 'error');
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 10. MODAL: IN TEM NHÃN ASSET TAG QR CODE (QRCODEJS)
+     * =========================================================================
+     */
+    function openPrintModal(deviceId) {
+      const dev = appState.devices.find(d => d.id === deviceId);
+      if (!dev) return;
+
+      document.getElementById('printLabelId').innerText = dev.id;
+      document.getElementById('printLabelName').innerText = dev.name;
+      document.getElementById('printLabelCategory').innerText = 'Loại: ' + dev.category;
+      document.getElementById('printLabelSn').innerText = 'S/N: ' + (dev.serial_number || 'N/A');
+
+      // Tạo mã QR bằng QRCode.js
+      const container = document.getElementById('qrcodeContainer');
+      container.innerHTML = '';
+      new QRCode(container, {
+        text: dev.id, // Nội dung quét: chính là mã Asset Tag
+        width: 85,
+        height: 85,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      openModal('printLabelModal');
+    }
+
+    /**
+     * =========================================================================
+     * 11. TAB 4: BẢNG LỊCH SỬ BẢO TRÌ TOÀN HỆ THỐNG
+     * =========================================================================
+     */
+    function renderHistoryTable() {
+      const tbody = document.getElementById('historyTableBody');
+      if (!tbody) return;
+
+      const q = (document.getElementById('historySearchInput')?.value || '').trim().toLowerCase();
+      const filterAct = document.getElementById('historyFilterAction')?.value || '';
+
+      const logs = appState.history.filter(item => {
+        const matchQ = !q || (
+          (item.device_id && item.device_id.toLowerCase().includes(q)) ||
+          (item.performed_by && item.performed_by.toLowerCase().includes(q)) ||
+          (item.description && item.description.toLowerCase().includes(q)) ||
+          (item.log_id && item.log_id.toLowerCase().includes(q))
+        );
+        const matchAct = !filterAct || item.action_type === filterAct;
+        return matchQ && matchAct;
+      });
+
+      if (logs.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="text-center py-10 text-slate-400 text-sm">
+              Không tìm thấy nhật ký bảo trì nào.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = logs.map((l, idx) => {
+        let actBadge = `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700">${escapeHtml(l.action_type)}</span>`;
+        if (l.action_type === 'Bảo dưỡng') actBadge = `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-teal-100 text-teal-800">Bảo dưỡng</span>`;
+        else if (l.action_type === 'Bàn giao') actBadge = `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800">Bàn giao</span>`;
+        else if (l.action_type === 'Báo hỏng / Sửa chữa') actBadge = `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">Báo hỏng / Sửa chữa</span>`;
+        else if (l.action_type === 'Thu hồi') actBadge = `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">Thu hồi</span>`;
+
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 px-4 text-center text-slate-400 font-mono text-xs">${idx + 1}</td>
+            <td class="py-3 px-4 font-mono text-xs text-slate-500">${escapeHtml(l.log_id || '')}</td>
+            <td class="py-3 px-4 font-mono font-bold text-blue-600">
+              <button onclick="openDeviceDetailModal('${l.device_id}')" class="hover:underline">${escapeHtml(l.device_id)}</button>
+            </td>
+            <td class="py-3 px-4">${actBadge}</td>
+            <td class="py-3 px-4 text-slate-600 whitespace-nowrap">${escapeHtml(l.date || '')}</td>
+            <td class="py-3 px-4 text-slate-700 font-medium">${escapeHtml(l.performed_by || '')}</td>
+            <td class="py-3 px-4 text-slate-600 max-w-xs truncate" title="${escapeHtml(l.description)}">${escapeHtml(l.description)}</td>
+            <td class="py-3 px-4 text-center">
+              <button onclick="openDeviceDetailModal('${l.device_id}')" class="p-1 text-slate-400 hover:text-blue-600" title="Xem thiết bị">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /**
+     * =========================================================================
+     * 12. CÀI ĐẶT API & XUẤT DỮ LIỆU (EXPORT CSV)
+     * =========================================================================
+     */
+    function openSettingsModal() {
+      document.getElementById('gasApiUrlInput').value = appState.apiUrl;
+      document.getElementById('apiTestResult').classList.add('hidden');
+      openModal('settingsModal');
+    }
+
+    async function testApiConnection() {
+      const inputUrl = document.getElementById('gasApiUrlInput').value.trim();
+      const resBox = document.getElementById('apiTestResult');
+      const testBtn = document.getElementById('testApiBtn');
+
+      if (!inputUrl) {
+        showToast('Vui lòng nhập URL Google Apps Script Web App!', 'warning');
+        return;
+      }
+
+      testBtn.disabled = true;
+      testBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Đang test...`;
+      resBox.className = 'p-3 rounded-lg text-xs bg-slate-100 text-slate-700';
+      resBox.innerText = 'Đang gửi ping đến Google Apps Script...';
+      resBox.classList.remove('hidden');
+
+      try {
+        const url = new URL(inputUrl);
+        url.searchParams.set('action', 'ping');
+        url.searchParams.set('t', Date.now());
+
+        const res = await fetch(url.toString(), {
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await res.json();
+
+        if (data && data.status === 'success') {
+          resBox.className = 'p-3 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-300';
+          resBox.innerHTML = `<strong><i class="fa-solid fa-circle-check"></i> Kết nối thành công!</strong><br>${data.message}`;
+        } else {
+          throw new Error(data.message || 'Phản hồi không hợp lệ');
+        }
+      } catch (err) {
+        resBox.className = 'p-3 rounded-lg text-xs bg-rose-50 text-rose-800 border border-rose-300';
+        resBox.innerHTML = `<strong><i class="fa-solid fa-circle-xmark"></i> Không thể kết nối:</strong> ${err.message}<br><small>Kiểm tra xem Web App đã được Deploy với quyền "Anyone" chưa.</small>`;
+      } finally {
+        testBtn.disabled = false;
+        testBtn.innerHTML = `<i class="fa-solid fa-plug"></i> Kiểm Tra Kết Nối`;
+      }
+    }
+
+    function saveApiUrl() {
+      const inputUrl = document.getElementById('gasApiUrlInput').value.trim();
+      appState.apiUrl = inputUrl;
+      localStorage.setItem(STORAGE_KEY_API_URL, inputUrl);
+      closeModal('settingsModal');
+
+      if (inputUrl) {
+        fetchData(true);
+      } else {
+        loadMockData();
+      }
+    }
+
+    function switchToDemoMode() {
+      document.getElementById('gasApiUrlInput').value = '';
+      appState.apiUrl = '';
+      localStorage.removeItem(STORAGE_KEY_API_URL);
+      closeModal('settingsModal');
+      loadMockData();
+    }
+
+    function exportToCsv() {
+      if (appState.devices.length === 0) {
+        showToast('Không có dữ liệu để xuất!', 'warning');
+        return;
+      }
+
+      const headers = ['Mã Tài Sản', 'Tên Thiết Bị', 'Chủng Loại', 'Số Serial', 'IP/MAC', 'Khu Vực', 'Người Sử Dụng', 'Trạng Thái', 'Ngày Mua', 'Ghi Chú'];
+      const rows = appState.devices.map(d => [
+        `"${d.id || ''}"`,
+        `"${(d.name || '').replace(/"/g, '""')}"`,
+        `"${d.category || ''}"`,
+        `"${d.serial_number || ''}"`,
+        `"${d.ip_mac || ''}"`,
+        `"${d.factory_area || ''}"`,
+        `"${(d.assigned_to || '').replace(/"/g, '""')}"`,
+        `"${d.status || ''}"`,
+        `"${d.purchase_date || ''}"`,
+        `"${(d.notes || '').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `Danh_Sach_Thiet_Bi_CNTT_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      showToast('Đã xuất file CSV thành công!', 'success');
+    }
+
+    /**
+     * =========================================================================
+     * 13. CÁC HÀM TIỆN ÍCH GIAO DIỆN (TABS, MODAL, TOAST)
+     * =========================================================================
+     */
+    function switchTab(tabId) {
+      // Dừng camera nếu rời khỏi tab scanner
+      if (tabId !== 'scanner' && isCameraRunning) {
+        stopCameraScanner();
+      }
+
+      const views = ['dashboard', 'devices', 'scanner', 'history'];
+      views.forEach(v => {
+        const viewEl = document.getElementById(`view-${v}`);
+        const btnEl = document.getElementById(`tab-btn-${v}`);
+        if (v === tabId) {
+          viewEl.classList.remove('hidden');
+          btnEl.className = 'nav-tab px-3 py-2 rounded-md text-blue-400 bg-slate-800 flex items-center gap-2 whitespace-nowrap font-bold';
+        } else {
+          viewEl.classList.add('hidden');
+          btnEl.className = 'nav-tab px-3 py-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2 whitespace-nowrap font-medium';
+        }
+      });
+
+      // Tự động bật camera nếu vào tab scanner
+      if (tabId === 'scanner') {
+        setTimeout(() => {
+          if (!isCameraRunning) startCameraScanner();
+        }, 300);
+      }
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      let bg = 'bg-slate-900 border-slate-700 text-white';
+      let icon = '<i class="fa-solid fa-info-circle text-blue-400"></i>';
+
+      if (type === 'success') {
+        bg = 'bg-emerald-950 border-emerald-700 text-emerald-100';
+        icon = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+      } else if (type === 'error') {
+        bg = 'bg-rose-950 border-rose-700 text-rose-100';
+        icon = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i>';
+      } else if (type === 'warning') {
+        bg = 'bg-amber-950 border-amber-700 text-amber-100';
+        icon = '<i class="fa-solid fa-circle-exclamation text-amber-400"></i>';
+      }
+
+      toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl border text-xs sm:text-sm transition-all duration-300 transform translate-y-2 opacity-0 ${bg}`;
+      toast.innerHTML = `<span>${icon}</span><span class="flex-1">${escapeHtml(message)}</span>`;
+
+      container.appendChild(toast);
+
+      // Trigger animation
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
